@@ -1,0 +1,21 @@
+FaceBook:
+  name: "FaceBook"
+  slug: "facebook"
+Messenger:
+  name: "Messenger"
+  slug: "messenger"
+Discord:
+  name: "Discord"
+  slug: "discord"
+LinkedIn:
+  name: "LinkedIn"
+  slug: "linkedin"
+GitHub:
+  name: "GitHub"
+  slug: "github"
+Gmail:
+  name: "Gmail"
+  slug: "gmail"
+PhoneNumber:
+  name: "Phone Number"
+  slug: "phonenumber" 

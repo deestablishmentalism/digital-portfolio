@@ -1,0 +1,201 @@
+languages:
+  PHP: 
+    slug: "php"
+    type: "programming"
+  JavaScript: 
+    slug: "javascript"
+    type: "programming"
+  Java: 
+    slug: "java"
+    type: "programming"
+  Python:
+    slug: "python"
+    type: "programming"
+  TypeScript:
+    slug: "typescript"
+    type: "programming"
+  C#:
+    slug: "csharp"
+    type: "programming"
+  Go:
+    slug: "go"
+    type: "programming"
+  Rust:
+    slug: "rust"
+    type: "programming"
+  Kotlin:
+    slug: "kotlin"
+    type: "programming"
+  Swift:
+    slug: "swift"
+    type: "programming"
+  Ruby:
+    slug: "ruby"
+    type: "programming"
+  Dart:
+    slug: "dart"
+    type: "programming"
+  SQL:
+    slug: "sql"
+    type: "query"
+  HTML:
+    slug: "html"
+    type: "markup"
+  CSS:
+    slug: "css"
+    type: "stylesheet"
+  XML:
+    slug: "xml"
+    type: "markup"
+  YAML:
+    slug: "yaml"
+    type: "markup"
+  JSON:
+    slug: "json"
+    type: "markup"
+
+frontend:
+  React:
+    slug: "react"
+    type: "library"
+    ref: JavaScript
+  Vue:
+    slug: "vue"
+    type: "framework"
+    ref: JavaScript
+  Angular:
+    slug: "angular"
+    type: "framework" 
+    ref: JavaScript
+  Next.js:
+    slug: "nextjs"
+    type: "framework"
+    ref: JavaScript
+  Nuxt:
+    slug: "nuxt"
+    type: "framework"
+    ref: JavaScript
+  Svelte:
+    slug: "svelte"
+    type: "framework"
+    ref: JavaScript
+  SvelteKit:
+    slug: "sveltekit"
+    type: "framework"
+    ref: JavaScript
+  Astro:
+    slug: "astro"
+    type: "framework"
+    ref: JavaScript
+  TailwindCSS:
+    slug: "tailwindcss"
+    type: "css-framework"
+    ref: null
+  Bootstrap:
+    slug: "bootstrap"
+    type: "css-framework"
+    ref: null
+  Three.js:
+    slug: "threejs"
+    type: "library"
+    ref: JavaScript
+  D3.js:
+    slug: "d3js"
+    type: "library"
+    ref: JavaScript
+  TypeScript:
+    slug: "typescript"
+    type: "language"
+    ref: JavaScript
+backend:
+  Express:
+    slug: "express"
+    type: "framework"
+    ref: JavaScript
+  NestJS:
+    slug: "nestjs"
+    type: "framework"
+    ref: TypeScript
+  Laravel:
+    slug: "laravel"
+    type: "framework"
+    ref: PHP
+  Spring Boot:
+    slug: "springboot"
+    type: "framework"
+    ref: Java
+  Django:
+    slug: "django"
+    type: "framework"
+    ref: Python
+  Flask:
+    slug: "flask"
+    type: "framework"
+    ref: Python
+  FastAPI:
+    slug: "fastapi"
+    type: "framework"
+    ref: Python
+  Ruby on Rails:
+    slug: "rubyonrails"
+    type: "framework"
+    ref: Ruby
+  ASP.NET:
+    slug: "aspnet"
+    type: "framework"
+    ref: C#
+  Node.js:
+    slug: "nodejs"
+    type: "runtime"
+    ref: JavaScript
+  Deno:
+    slug: "deno"
+    type: "runtime"
+    ref: TypeScript
+  PostgreSQL:
+    slug: "postgresql"
+    type: "database"
+    ref: SQL
+  MySQL:
+    slug: "mysql"
+    type: "database"
+    ref: SQL
+  SQLite:
+    slug: "sqlite"
+    type: "database"
+    ref: SQL
+  MongoDB:
+    slug: "mongodb"
+    type: "database"
+    ref: null
+  Redis:
+    slug: "redis"
+    type: "cache"
+    ref: null
+  Prisma:
+    slug: "prisma"
+    type: "orm"
+    ref: TypeScript
+  GraphQL:
+    slug: "graphql"
+    type: "api"
+    ref: null
+  Firebase:
+    slug: "firebase"
+    type: "baas"
+    ref: null
+tools:
+  Docker:
+    slug: "docker"
+    type: "devops"
+    ref: null
+  Vite:
+    slug: "vite"
+    type: "tool"
+    ref: "JavaScript"
+  Postman:
+    slug: "postman"
+    type: "tool"
+    ref: null
+
+    
