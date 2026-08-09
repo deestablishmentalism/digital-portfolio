@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-DUAcabCT.js";var t=e();function n(){return(0,t.jsx)(t.Fragment,{children:(0,t.jsx)(`div`,{children:(0,t.jsx)(`h1`,{children:` This is dashboard`})})})}export{n as default};
