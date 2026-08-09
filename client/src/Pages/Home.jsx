@@ -1,6 +1,7 @@
 import ProjectsSectionComponent from "../Components/ProjectsSectionComponent";
 import SkillsSectionComponent from "../Components/SkillsSectionComponent";
 import AboutSectionComponent from "../Components/AboutSectionComponent";
+import ContactSectionComponent from "../Components/ContactSectionComponent";
 function Home() {
     return(
         <>
@@ -17,6 +18,12 @@ function Home() {
                     <h1 className="m-2 text-2xl font-sub-header-text text-white"> Projects</h1>
                     <div className="flex flex-wrap w-full">
                         <ProjectsSectionComponent/>   
+                    </div>
+                </div>
+                <div id="contacts" className="home-container">
+                    <h1 className="m-2 text-2xl font-sub-header-text text-white"> Contacts</h1>
+                    <div className="p-2 w-full">
+                        <ContactSectionComponent/>
                     </div>
                 </div>
             </div>

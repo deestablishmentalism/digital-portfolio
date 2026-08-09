@@ -10,7 +10,13 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
     const innerRef = useRef(null)
     const [scale, setScale] = useState(1)
     const [parentHeight, setParentHeight] = useState(null)
-    const [skills, setSkills] = useState({})
+    const [skills, setSkills] = useState([])
+    const [projects, setProjects] = useState([])
+    const [skillBuilder, setSkillBuilder] = useState({})
+    const languages = skills?.langauges || []
+    const frontend = skills?.frontend || []
+    const backend = skills?.backend || []
+    const tools = skills?.tools || []
     useEffect(()=> {
         async function fetchSkills() {
             try {
@@ -24,11 +30,28 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
         }
         fetchSkills();
     }, [])
-    const languages = skills?.langauges || []
-    const frontend = skills?.frontend || []
-    const backend = skills?.backend || []
-    const tools = skills?.tools || []
-
+    useEffect(()=> {
+        async function fetchProjects() {
+            try {
+                const response = await fetch("/api/projects")
+                if(!response.ok) throw new Error("ERR: " + response.status)
+                const data = await response.json()
+                const counts = {}
+                for (const project of data) {
+                    for (const language of project.languages || []) {
+                        const slug = language.toLowerCase()
+                        counts[slug] = (counts[slug] || 0) + 1
+                    }
+                }
+                setProjects(data)
+                setSkillBuilder(counts)
+            }
+            catch(error) {
+                console.error("Error fetching projects "+ error.message)
+            }
+        }
+        fetchProjects();
+    }, [])
     useLayoutEffect(() => {
         if(!preview) return;
 
@@ -79,21 +102,21 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
             {editMode !== null && editMode ?
                 <EditMode skills={skills}/>
                 :
-                <div className={`flex ${preview ? "flex-wrap" : ""} justify-between`}>
-                    <DisplaySkills items={frontend} title="Front-End" preview={preview}/>
-                    <DisplaySkills items={backend} title="Back-End" preview={preview}/>
-                    <DisplaySkills items={languages} title="Languages" preview={preview}/>
-                    <DisplaySkills items={tools} title="Tools & Others" preview={preview}/>
+                <div className={`flex ${preview ? "flex-wrap" : ""} justify-between flex-wrap md:flex-nowrap`}>
+                    <DisplaySkills items={frontend} title="Front-End" preview={preview} builder={skillBuilder} total={projects.length}/>
+                    <DisplaySkills items={backend} title="Back-End" preview={preview} builder={skillBuilder} total={projects.length}/>
+                    <DisplaySkills items={languages} title="Languages" preview={preview} builder={skillBuilder} total={projects.length}/>
+                    <DisplaySkills items={tools} title="Tools & Others" preview={preview} builder={skillBuilder} total={projects.length}/>
                 </div>
             }
             </div>
         </div>
   );
 }
-function DisplaySkills({items, title, preview}) {
+function DisplaySkills({items, title, preview, builder, total}) {
     return(
         <>
-            <div className={`m-2 p-2 border-1 border-slate-900 rounded ${preview ? "w-80" : "w-full"}`}>
+            <div className={`m-2 p-4 border-1 border-slate-900 rounded ${preview ? "w-80" : "w-full"}`}>
                 <span className="text-teal-500 text-xs">{title}</span>
                 {items.length === 0
                     ? <div>
@@ -101,20 +124,59 @@ function DisplaySkills({items, title, preview}) {
                     </div>
                     :
                     <div className="flex flex-wrap gap-2">
-                        {items.map((slug)=> (
-                            <div key={slug} className="px-2 bg-transparent rounded-full flex items-center gap-2 border-2 border-slate-800">
-                                {(() => {
-                                        const Icon = DevIconsMapper(preview)[slug];
-                                        return Icon ? <Icon className="size-5"/> : null;
-                                })()
-                                }
-                                <span className="m-1 flex font-header-text text-teal-200 text-[15px]">{slug}</span>
-                            </div>
-                        ))}
+                        {items.map((slug)=> {
+                            const count = builder?.[slug] || 0
+                            const mastery = total > 0 ? Math.round((count / total) * 100) : 0
+                            return (
+                                <SkillItem
+                                    key={slug}
+                                    slug={slug}
+                                    mastery={mastery}
+                                    preview={preview}
+                                />
+                            );
+                        })}
                     </div>
                 }
             </div>
         </>
+    );
+}
+function SkillItem({slug, mastery, preview}) {
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setProgress(mastery);
+        }, 50);
+
+        return () => clearTimeout(timer);
+    }, [mastery]);
+
+    const Icon = DevIconsMapper(preview)[slug];
+
+    return (
+        <div className="relative px-2 py-1 bg-transparent rounded-full flex items-center gap-2 border-2 border-slate-800 overflow-hidden">
+
+            <div
+                className="absolute inset-y-0 left-0 bg-radial from-teal-600/70 via-teal-800/70 to-teal-950/70 rounded-full transition-[width] duration-700 ease-out"
+                style={{width: `${progress}%`}}
+            />
+
+            <div className="relative flex items-center gap-2">
+                {Icon && <Icon className="size-5" />}
+
+                <span className="m-1 font-header-text text-teal-200 text-[15px]">
+                    {slug}
+                </span>
+
+                {mastery > 0 && (
+                    <span className="text-[10px] text-teal-400">
+                        {mastery}%
+                    </span>
+                )}
+            </div>
+        </div>
     );
 }
 function EditMode({skills}) {

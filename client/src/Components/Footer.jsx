@@ -82,10 +82,13 @@ function EditMode({links, setLinks}) {
     const [selectedIds, setSelectedIds] = useState([])
     const [prevLinks, setPrevLinks] = useState(links)
     const [isSaving, setIsSaving] = useState(false)
-    if (prevLinks !== links) {
-        setPrevLinks(links)
-        setSelectedIds(links.filter(l => l.in_footer).map(l => l._id))
-    }
+    useEffect(() => {
+        setSelectedIds(
+            links
+                .filter(link => link.in_footer)
+                .map(link => link._id)
+        );
+    }, [links]);
     const toggleLink = (id, checked) => {
         setSelectedIds(prev => checked
             ? [...new Set([...prev, id])]

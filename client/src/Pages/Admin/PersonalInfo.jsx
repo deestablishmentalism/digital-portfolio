@@ -1,7 +1,7 @@
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Button} from "@/components/ui/button"
-import {TextArea} from "@/components/ui/textarea"
+import {Textarea} from "@/components/ui/textarea"
 import {useState, useEffect, useRef} from "react"
 import SpinnerComponent from "../../Components/SpinnerComponent"
 import AddressSelectComponent from "../../Components/AddressSelectComponent"
@@ -220,7 +220,7 @@ export default function PersonalInfo() {
                         </div>  
                         <div>
                             <h2 className="font-sub-header-text text-2xl">Summary</h2>   
-                            <p className="text-[13px] text-white">{
+                            <p className="text-[13px] text-white font-header-text">{
                                 personalInfo?.summary    
                             }</p> 
                         </div>        
@@ -413,110 +413,112 @@ function EditMode({personalInfo, onSave}) {
     return(
         <>
             <div className="p-2 bg-white rounded border-1 border-slate-800">
-                <div>
-                    <h2>Edit Personal Information</h2>
-                    <div className="flex flex-wrap [&>div]:m-2">
-                        <div>
-                            <Label htmlFor="first-name" className="mb-2">First Name</Label>
-                            <Input id="first-name" placeholder="First Name" value={payLoad.first_name} 
-                            onChange={(e) => setPayload({...payLoad, first_name: e.target.value})}/>       
-                        </div>
-                        <div>
-                            <Label htmlFor="middle-name" className="mb-2">Middle Name</Label>
-                            <Input id="middle-name" placeholder="Middle Name" value={payLoad.middle_name} 
-                            onChange={(e) => setPayload({...payLoad, middle_name: e.target.value})}/>
-                        </div>
-                        <div>
-                            <Label htmlFor="last-name" className="mb-2">Last Name</Label>
-                            <Input id="last-name" placeholder="Last Name" value={payLoad.last_name}
-                            onChange={(e) => setPayload({...payLoad, last_name: e.target.value})}/>
-                        </div>
-                        <div>
-                            <Label htmlFor="summary" className="mb-2">Summary</Label>
-                            <TextArea id="summary" placeholder="Enter summary..."
-                            onChange={(e)=> setPayload({...payLoad, summary: e.target.value})}
-                            />
+                <div className="flex flex-col">
+                    <div>
+                        <h2>Edit Personal Information</h2>
+                        <div className="flex flex-wrap [&>div]:m-2">
+                            <div>
+                                <Label htmlFor="first-name" className="mb-2">First Name</Label>
+                                <Input id="first-name" placeholder="First Name" value={payLoad.first_name} 
+                                onChange={(e) => setPayload({...payLoad, first_name: e.target.value})}/>       
+                            </div>
+                            <div>
+                                <Label htmlFor="middle-name" className="mb-2">Middle Name</Label>
+                                <Input id="middle-name" placeholder="Middle Name" value={payLoad.middle_name} 
+                                onChange={(e) => setPayload({...payLoad, middle_name: e.target.value})}/>
+                            </div>
+                            <div>
+                                <Label htmlFor="last-name" className="mb-2">Last Name</Label>
+                                <Input id="last-name" placeholder="Last Name" value={payLoad.last_name}
+                                onChange={(e) => setPayload({...payLoad, last_name: e.target.value})}/>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <h2>Edit Address</h2>
-                    <div className="flex flex-wrap [&>div]:m-2">
-                        <div>
-                            <Label htmlFor="region" className="mb-2">Region</Label>
-                            {isRegionFetching ? (
-                                <SpinnerComponent width={20} height={20} color="black"/>
-                            ) 
-                            : regions !== null ?
-                            (
-                                <AddressSelectComponent data={regions} value={payLoad.address.region}
-                                onValueChange={handleRegionChange} title="Region"/>
-                            ) 
-                            : (
-                                <Input placeholder="Region" value={payLoad.address.region}
-                                onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, region: e.target.value}})}
-                                />    
-                            )}
-                        </div>
-                        <div >
-                            <Label htmlFor="province" className="mb-2">Province</Label>
-                            {isProvinceFetching && regionCode ? (
-                                <SpinnerComponent width={20} height={20} color="black"/>
-                            )
-                            : provinces !== null ?
-                            (
-                            <AddressSelectComponent data={provinces} value={payLoad.address.province}
-                            onValueChange={handleProvinceChange} title="Province"/>
-                            )
-                            : (
-                                <Input placeholder="Province" value={payLoad.address.province}
-                                onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, province: e.target.value}})}
+                    <div className="w-full">
+                        <Label htmlFor="summary" className="mb-2">Summary</Label>
+                        <Textarea id="summary" placeholder="Enter summary..." value={payLoad.summary}
+                        onChange={(e)=> setPayload({...payLoad, summary: e.target.value})}
+                        />
+                    </div>
+                    <div>
+                        <h2>Edit Address</h2>
+                        <div className="flex flex-wrap [&>div]:m-2">
+                            <div>
+                                <Label htmlFor="region" className="mb-2">Region</Label>
+                                {isRegionFetching ? (
+                                    <SpinnerComponent width={20} height={20} color="black"/>
+                                ) 
+                                : regions !== null ?
+                                (
+                                    <AddressSelectComponent data={regions} value={payLoad.address.region}
+                                    onValueChange={handleRegionChange} title="Region"/>
+                                ) 
+                                : (
+                                    <Input placeholder="Region" value={payLoad.address.region}
+                                    onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, region: e.target.value}})}
+                                    />    
+                                )}
+                            </div>
+                            <div >
+                                <Label htmlFor="province" className="mb-2">Province</Label>
+                                {isProvinceFetching && regionCode ? (
+                                    <SpinnerComponent width={20} height={20} color="black"/>
+                                )
+                                : provinces !== null ?
+                                (
+                                <AddressSelectComponent data={provinces} value={payLoad.address.province}
+                                onValueChange={handleProvinceChange} title="Province"/>
+                                )
+                                : (
+                                    <Input placeholder="Province" value={payLoad.address.province}
+                                    onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, province: e.target.value}})}
+                                    />
+                                )}
+                            </div>
+                            <div>
+                                <Label htmlFor="city" className="mb-2">City</Label>
+                                {isCityFetching && provinceCode ? (
+                                    <SpinnerComponent width={20} height={20} color="black"/>
+                                )
+                                : cities !== null ?
+                                (
+                                <AddressSelectComponent data={cities} value={payLoad.address.city}
+                                onValueChange={handleCityChange} title="City"/>
+                                )
+                                : (
+                                    <Input placeholder="City" value={payLoad.address.city}
+                                    onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, city: e.target.value}})}
+                                    />
+                                )}
+                            </div>
+                            <div>
+                                <Label htmlFor="barangay" className="mb-2">Barangay</Label>
+                                {isBarangayFetching && cityCode ? (
+                                    <SpinnerComponent width={20} height={20} color="black"/>
+                                )
+                                : barangays !== null ?
+                                (
+                                <AddressSelectComponent data={barangays} value={payLoad.address.barangay}
+                                onValueChange={handleBarangayChange} title="Barangay"/>
+                                )
+                                : (
+                                    <Input placeholder="Barangay" value={payLoad.address.barangay}
+                                    onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, barangay: e.target.value}})}
+                                    />
+                                )}
+                            </div>
+                            <div>
+                                <Label htmlFor="subdivision" className="mb-2">Subdivision/Street</Label>
+                                <Input type="text" value={payLoad.address.subdivision} placeholder="Enter Subdivision or Street"
+                                onChange={(e)=> setPayload({...payLoad, address: {...payLoad.address, subdivision: e.target.value}})}
                                 />
-                            )}
-                        </div>
-                        <div>
-                            <Label htmlFor="city" className="mb-2">City</Label>
-                            {isCityFetching && provinceCode ? (
-                                <SpinnerComponent width={20} height={20} color="black"/>
-                            )
-                            : cities !== null ?
-                            (
-                            <AddressSelectComponent data={cities} value={payLoad.address.city}
-                            onValueChange={handleCityChange} title="City"/>
-                            )
-                            : (
-                                <Input placeholder="City" value={payLoad.address.city}
-                                onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, city: e.target.value}})}
+                            </div>
+                            <div>
+                                <Label htmlFor="subdivision" className="mb-2">House Number</Label>
+                                <Input type="text" value={payLoad.address.house_number} placeholder="Enter House Number"
+                                onChange={(e)=> setPayload({...payLoad, address: {...payLoad.address, house_number: e.target.value}})}
                                 />
-                            )}
-                        </div>
-                        <div>
-                            <Label htmlFor="barangay" className="mb-2">Barangay</Label>
-                            {isBarangayFetching && cityCode ? (
-                                <SpinnerComponent width={20} height={20} color="black"/>
-                            )
-                            : barangays !== null ?
-                            (
-                            <AddressSelectComponent data={barangays} value={payLoad.address.barangay}
-                            onValueChange={handleBarangayChange} title="Barangay"/>
-                            )
-                            : (
-                                <Input placeholder="Barangay" value={payLoad.address.barangay}
-                                onChange={(e) => setPayload({...payLoad, address: {...payLoad.address, barangay: e.target.value}})}
-                                />
-                            )}
-                        </div>
-                        <div>
-                            <Label htmlFor="subdivision" className="mb-2">Subdivision/Street</Label>
-                            <Input type="text" value={payLoad.address.subdivision} placeholder="Enter Subdivision or Street"
-                            onChange={(e)=> setPayload({...payLoad, address: {...payLoad.address, subdivision: e.target.value}})}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="subdivision" className="mb-2">House Number</Label>
-                            <Input type="text" value={payLoad.address.house_number} placeholder="Enter House Number"
-                            onChange={(e)=> setPayload({...payLoad, address: {...payLoad.address, house_number: e.target.value}})}
-                            />
+                            </div>
                         </div>
                     </div>
                     <div className="m-1 p-2  flex justify-end">

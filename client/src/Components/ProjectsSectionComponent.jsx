@@ -9,6 +9,7 @@ export default function ProjectsSectionComponent({preview=false}) {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false)
     const [gallery, setGallery] = useState([])
     const [currentIndex, setCurrentIndex] = useState(0)
+    const [overlayOpen, setOverlayOpen] = useState(new Set())
     useEffect(()=>{
         async function fetchProjects() {
             try {
@@ -69,32 +70,47 @@ export default function ProjectsSectionComponent({preview=false}) {
                             const date = new Date(project.createdAt);
                             const startDate = new Date(project.project_start_date);
                             const endDate = new Date(project.project_end_date);
+                            const isOpen = overlayOpen.has(project._id);
+                            const toggleOverlay = (e) => {
+                                if(preview) return;
+                                e.stopPropagation();
+                                setOverlayOpen(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(project._id)) next.delete(project._id);
+                                    else next.add(project._id);
+                                    return next;
+                                });
+                            };
                             return(
                                 <div key={project._id} className="group relative rounded w-80 h-57 bg-black z-1 overflow-hidden 
                                 font-header-text text-[11px]" 
+                                onClick={toggleOverlay}
                                 >
                                     {!preview && (
-                                        <div className="absolute top-0 right-0 z-20 h-full w-full bg-teal-950 text-white 
-                                            opacity-0
+                                        <div className={`absolute top-0 right-0 z-20 h-full w-full bg-teal-950 text-white 
                                             -translate-y-4
                                             transition-all
                                             duration-300
                                             ease-out
                                             group-hover:opacity-100
-                                            group-hover:translate-y-0 
-                                            flex flex-col">
+                                            group-hover:translate-y-0
+                                            flex flex-col
+                                            ${isOpen ? "opacity-100 translate-y-0" : "opacity-0"}`}>
                                             <div className="p-2 flex justify-end text-white">
                                                 <button
                                                     className="p-2 cursor-pointer bg-black rounded-full
                                                     duration-200 hover:bg-teal-950 hover:text-teal-200 hover:border-1"
-                                                    onClick={()=>handleProjectClick(project)}
+                                                    onClick={(e)=> {
+                                                        e.stopPropagation();
+                                                        handleProjectClick(project);
+                                                    }}
                                                 >
                                                     <span>
                                                         {project.preview.type.toUpperCase()}
                                                     </span>
                                                 </button>
                                             </div>
-                                            <div className="p-2 flex flex-wrap gap-2 justify-center w-full opacity-0 group-hover:opacity-100">
+                                            <div className={`p-2 flex flex-wrap gap-2 justify-center w-full group-hover:opacity-100 ${isOpen ? "opacity-100" : "opacity-0"}`}>
                                                 {!preview && (project.languages.map((language, index)=> {
                                                     const Icon = DevIconsMapper(false)[language.toLowerCase()];
                                                     return(
