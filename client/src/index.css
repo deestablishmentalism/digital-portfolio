@@ -108,7 +108,7 @@
            cursor-pointer;
   }
   .grid-bg {
-    @apply bg-slate-950 border-b-2 shadow-md;
+    @apply bg-slate-950/90 backdrop-blur-sm  border-b-2 shadow-md;
     background-image:
       linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
