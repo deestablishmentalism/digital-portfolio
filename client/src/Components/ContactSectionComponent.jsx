@@ -20,7 +20,7 @@ export default function ContactSectionComponent() {
     return(
         <>
             <div>
-                <h2 className="text-2xl font-bold text-white">If you are interested, this is where you can reach me.</h2>
+                <h2 className="text-md m-1 font-bold text-white">Open to work or for projects.</h2>
                 <div className="p-2 border-1 border-slate-800 rounded flex"> 
                     {links.length === 0 ? (
                         <div className="flex justify-center">No Links provided.</div>

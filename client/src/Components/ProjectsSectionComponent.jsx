@@ -1,4 +1,30 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useLayoutEffect, useRef } from "react";
+function FitText({ text, baseSize = 24, minSize = 10 }) {
+    const ref = useRef(null);
+    const [size, setSize] = useState(baseSize);
+    useLayoutEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const fit = () => {
+            let s = baseSize;
+            el.style.fontSize = `${s}px`;
+            while (s > minSize && el.scrollWidth > el.clientWidth) {
+                s -= 0.5;
+                el.style.fontSize = `${s}px`;
+            }
+            setSize(s);
+        };
+        fit();
+        const ro = new ResizeObserver(() => fit());
+        ro.observe(el.parentElement);
+        return () => ro.disconnect();
+    }, [baseSize, minSize, text]);
+    return (
+        <span ref={ref} className="font-bold text-2xl whitespace-nowrap min-w-0 overflow-hidden" style={{ fontSize: size }}>
+            {text}
+        </span>
+    );
+}
 import SpinnerComponent from "./SpinnerComponent";
 import LazyImageLoader from "../utils/LazyImageLoader";
 import {X, ArrowBigLeft, ArrowBigRight} from "lucide-react"
@@ -65,7 +91,7 @@ export default function ProjectsSectionComponent({preview=false}) {
                         <span>No Projects to show</span>
                     </div>  
                 ) : (
-                   <div className="">
+                   <div className="flex gap-3">
                         {projects.map((project) => {
                             const date = new Date(project.createdAt);
                             const startDate = new Date(project.project_start_date);
@@ -110,7 +136,8 @@ export default function ProjectsSectionComponent({preview=false}) {
                                                     </span>
                                                 </button>
                                             </div>
-                                            <div className={`p-2 flex flex-wrap gap-2 justify-center w-full group-hover:opacity-100 ${isOpen ? "opacity-100" : "opacity-0"}`}>
+                                            <div className={`p-2 flex flex-wrap gap-2 justify-center w-full 
+                                                group-hover:opacity-100 ${isOpen ? "opacity-100" : "opacity-0"}`}>
                                                 {!preview && (project.languages.map((language, index)=> {
                                                     const Icon = DevIconsMapper(false)[language.toLowerCase()];
                                                     return(
@@ -121,7 +148,7 @@ export default function ProjectsSectionComponent({preview=false}) {
                                                 })
                                             )}
                                             </div>
-                                            <div className="p-2">
+                                            <div className="p-2 overflow-y-auto scrollable">
                                                 <span>
                                                     {project.project_description}
                                                 </span>
@@ -137,9 +164,7 @@ export default function ProjectsSectionComponent({preview=false}) {
                                     </div>
                                     <div className="p-2 text-gray-200 flex flex-col">
                                         <div className="flex justify-between">
-                                            <span className="font-bold text-2xl"> 
-                                            {project.project_name} 
-                                            </span>
+                                            <FitText text={project.project_name} />
                                             <div 
                                                 className="px-2 py-1 rounded-full 
                                                 bg-transparent border-2 border-teal-950">

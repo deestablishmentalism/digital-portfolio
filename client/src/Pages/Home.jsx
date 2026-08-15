@@ -16,7 +16,7 @@ function Home() {
                 </div>
                 <div id="projects" className="home-container">
                     <h1 className="m-2 text-2xl font-sub-header-text text-white"> Projects</h1>
-                    <div className="flex flex-wrap w-full">
+                    <div className="flex flex-wrap w-full overflow-y-auto scrollable">
                         <ProjectsSectionComponent/>   
                     </div>
                 </div>
