@@ -4,6 +4,7 @@ import {createBrowserRouter, RouterProvider }from 'react-router-dom'
 import React from 'react'
 import HomeLayout from './Layout/HomeLayout'
 import AdminLayout from './Layout/AdminLayout'
+import {Toaster} from "@/components/ui/toast"
 
 const AdminDashboard = React.lazy(()=> import("./Pages/Admin/Dashboard"))
 const AdminProject = React.lazy(()=> import("./Pages/Admin/Project"))
@@ -35,7 +36,20 @@ function App() {
 
   const [count, setCount] = useState(0)
   return (
-    <RouterProvider router={router}/>
+    <RouterProvider router={router}>
+      <Toaster 
+        richColors
+        toastOptions={{
+            classNames: {
+                toast: "rounded-lg shadow-lg border p-4",
+                title: "font-semibold",
+                description: "text-white/90",
+                success: "bg-emerald-600 text-white border-emerald-700",
+                error: "bg-red-600 text-white border-red-700",
+            },
+        }}
+      />
+    </RouterProvider>
   )
 }
 
