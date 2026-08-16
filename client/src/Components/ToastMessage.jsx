@@ -1,9 +1,11 @@
-import { toast } from "sonner";
-export default function ToastMessage(isSuccess, message) {
-    if (isSuccess) {
-        toast.success(message);
+import { toast } from "@/components/ui/toast";
+export function useToastMessage() {
+    function showToast(isSuccess, message) {
+        toast.add({
+            title: isSuccess ? "Success!" : "Error!",
+            description: message,
+            type: isSuccess ? "success" : "error"
+        });
     }
-    else {
-        toast.error(message);
-    }
+    return showToast;
 }

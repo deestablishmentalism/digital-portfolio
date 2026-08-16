@@ -33,24 +33,12 @@ const router = createBrowserRouter([
   {path: '/login', element: <Login/>}
 ]);
 function App() {
-
-  const [count, setCount] = useState(0)
-  return (
-    <RouterProvider router={router}>
-      <Toaster 
-        richColors
-        toastOptions={{
-            classNames: {
-                toast: "rounded-lg shadow-lg border p-4",
-                title: "font-semibold",
-                description: "text-white/90",
-                success: "bg-emerald-600 text-white border-emerald-700",
-                error: "bg-red-600 text-white border-red-700",
-            },
-        }}
-      />
-    </RouterProvider>
-  )
+    return (
+        <>
+            <RouterProvider router={router} />
+            <Toaster />
+        </>
+    )
 }
 
 export default App
