@@ -14,6 +14,11 @@ const linkSchema = new mongoose.Schema({
             type: Boolean,
             required: true,
             default: false
+        },
+        in_contact: {
+            type: Boolean,
+            required: true,
+            default: false
         }
     },
     {timestamps: true}

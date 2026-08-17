@@ -63,3 +63,30 @@ export async function saveFooterLinks(req, res) {
         });   
     }
 }
+export async function saveLink(req, res) {
+    try {
+        const {_id, link, in_footer,in_contact} = req.body;
+        const targetLink = await Link.findById(_id);
+        if (!targetLink) {
+            return res.status(404).json({
+                success: false,
+                message: "Target link not found!"
+            });
+        }
+        targetLink.link = link;
+        targetLink.in_footer = in_footer;
+        targetLink.in_contact = in_contact;
+        await targetLink.save();
+        res.status(200).json({
+            success: true,
+            message: "Successfully updated link!",
+            data: targetLink
+        });
+    }
+    catch(error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error: " + error.message
+        })
+    }
+}
