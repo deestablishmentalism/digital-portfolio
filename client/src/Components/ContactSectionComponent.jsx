@@ -6,7 +6,7 @@ export default function ContactSectionComponent() {
     useEffect(()=> {
         async function fetchLinks() {
             try {
-                const response = await fetch("/api/links")
+                const response = await fetch("/api/links/contacts")
                 if(!response.ok) throw new Error("ERR: "+response.status)
                 setLinks(await response.json())
             }

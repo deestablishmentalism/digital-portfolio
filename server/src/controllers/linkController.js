@@ -45,6 +45,18 @@ export async function getFooterLinks(req, res) {
         });   
     }
 }
+export async function getContactLinks(req,res) {
+    try {
+        const contactLinks = await Link.find({in_contact: true});
+        res.status(200).json(contactLinks);
+    }
+    catch(error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error: " + error.message
+        });  
+    }
+}
 export async function saveFooterLinks(req, res) {
     try {
         const {ids} = req.body;

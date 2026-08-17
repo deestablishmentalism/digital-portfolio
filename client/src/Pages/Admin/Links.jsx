@@ -9,6 +9,8 @@ import {Button} from "@/components/ui/button"
 import {Checkbox} from "@/components/ui/checkbox"
 import axios from "axios";
 import {useToastMessage} from "../../Components/ToastMessage"
+import Footer from "../../Components/Footer"
+import ContactSectionComponent from "../../Components/ContactSectionComponent"
 export default function Links() {
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isOpenEdit, setIsOpenEdit] = useState(false)
@@ -126,6 +128,14 @@ export default function Links() {
                             </div>
                         }
                     </div>
+                </div>
+                <div>
+                    <h1>Footer Links</h1>
+                    <Footer preview={true}/>
+                </div>
+                <div>
+                    <h1>Contact Links</h1>
+                    <ContactSectionComponent/>
                 </div>
             </div>
         </>
