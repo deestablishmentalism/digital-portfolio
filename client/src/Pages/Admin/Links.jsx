@@ -49,7 +49,13 @@ export default function Links() {
                 </div>
                 <div>
                     {isOpenModal && (
-                        <AddLinks open={isOpenModal} onOpenChange={setIsOpenModal}/>
+                        <AddLinks open={isOpenModal} onOpenChange={setIsOpenModal} 
+                        onSave={(data)=> {
+                            setLinks(prev=> [...prev, data])
+                            setIsOpenModal(false)
+                            setContactRefreshKey(prev=>prev+1)
+                            setFooterRefreshKey(prev=>prev+1)
+                        }}/>
                     )}
                 </div>
                 <div className="mt-2 p-2">
@@ -61,12 +67,12 @@ export default function Links() {
                         links.length === 0 ? 
                             <div className="flex justify-center"> <span className="text-white text-xl">No Links added yet.</span></div>
                             :
-                            <div className="flex">
+                            <div className="flex flex-wrap">
                                 {links.map((link)=> {
                                     const date = new Date(link.updatedAt ?? link.createdAt);
                                     const isEditing = editId === link._id;
                                         return (
-                                            <div key={link._id} className="group m-2 card-light font-bold cursor-pointer relative">
+                                            <div key={link._id} className="group m-2 card-light font-bold cursor-pointer relative flex-1">
                                                 <div 
                                                 className={`absolute top-5 right-35 flex gap-3 z-10
                                                     ${isEditing
@@ -105,13 +111,13 @@ export default function Links() {
                                                         }}/>
                                                         :
                                                         (
-                                                        <div className="p-2 flex flex-col items-center">
+                                                        <div className="p-2 flex flex-col items-center justify-center">
                                                             <span className="m-1 p-1 flex items-center">{link.link}</span> 
                                                             {
 
                                                             }   
                                                             <span>
-                                                            {link.updatedAt ? "Updated entry at " : "Created entry at "}
+                                                            {link.updatedAt != null ? "Updated entry at " : "Created entry at "}
                                                             <span>
                                                             {
                                                                 new Intl.DateTimeFormat("en-US",{

@@ -14,15 +14,18 @@ export async function getAllLinks(req, res) {
 }
 export async function createLink(req, res) {
     try {
-        const {social, link} = req.body;
+        const {social, link, in_footer, in_contact} = req.body;
 
         const createLink = await Link.create({
             social,
-            link
+            link,
+            in_footer,
+            in_contact,
         });
         if(!link) throw new Error("Failed to create this link");
         res.status(201).json({
             success: true,
+            message: "Successfully created link!",
             data: createLink
         });
     }

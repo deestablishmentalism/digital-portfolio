@@ -18,13 +18,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {Checkbox} from "@/components/ui/checkbox"
 import { useEffect, useState, Fragment } from "react";
 import { SocialsIconMapper } from "../utils/IconMapper";
 import SpinnerComponent from "./SpinnerComponent"
 import axios from "axios"
-export default function AddLinks({open, onOpenChange}) {
+import {useToastMessage} from "./ToastMessage"
+export default function AddLinks({open, onOpenChange, onSave}) {
+    const showToastMessage = useToastMessage();
     const [socials, setSocials] = useState([]);
     const [selectedSocial, setSelectedSocial] = useState("");
+    const [inFooter, setInFooter] = useState(false)
+    const [inContact, setInContact] = useState(false)
     const [link, setLink] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     useEffect(()=> {
@@ -47,14 +52,17 @@ export default function AddLinks({open, onOpenChange}) {
         try {
             const body = {
                 social: selectedSocial,
-                link: link
+                link: link,
+                in_footer: inFooter,
+                in_contact: inContact
             };
             const response = await axios.post("/api/links", body);
             if(!response.status === 201) throw new Error("ERR: " + response.status);
-            else window.location.reload();
+            showToastMessage(response.data.success, response.data.message);
+            onSave(response.data.data);
         }
         catch(error) {
-            console.error(error.message);
+            showToastMessage(false, error.message);
         }
         finally {
             setIsSubmitting(false);
@@ -80,6 +88,16 @@ export default function AddLinks({open, onOpenChange}) {
                                 <Input placeholder="Enter social's URL or corresponding value" value={link} 
                                     onChange={(e)=> setLink(e.target.value)}
                                 />
+                            </div>
+                            <div className="flex justify-between">
+                                <div>
+                                    <Label>Display link in Footer</Label>
+                                    <Checkbox onCheckedChange={(checked)=> setInFooter(checked)}/>
+                                </div>
+                                <div>
+                                    <Label>Display link in the Contacts</Label>
+                                    <Checkbox onCheckedChange={(checked)=> setInContact(checked)}/>
+                                </div>
                             </div>
                             <Button type="submit" disabled={isSubmitting}>
                                 {isSubmitting ? 
