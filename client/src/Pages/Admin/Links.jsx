@@ -17,6 +17,8 @@ export default function Links() {
     const [editId, setEditId] = useState(null)
     const [links, setLinks] = useState([])
     const [isFetching, setIsFetching] = useState(true);
+    const [contactRefreshKey, setContactRefreshKey] = useState(0)
+    const [footerRefreshKey, setFooterRefreshKey] = useState(0)
     useEffect(()=> { 
         async function fetchLinks() {
             try {
@@ -97,6 +99,8 @@ export default function Links() {
                                                                     link._id === data._id ? data : link
                                                                 )
                                                             )
+                                                            setContactRefreshKey(prev=> prev+1)
+                                                            setFooterRefreshKey(prev=> prev+1)
                                                             setEditId(null)
                                                         }}/>
                                                         :
@@ -129,13 +133,13 @@ export default function Links() {
                         }
                     </div>
                 </div>
-                <div>
-                    <h1>Footer Links</h1>
-                    <Footer preview={true}/>
+                <div className="mt-2">
+                    <h1 className="text-2xl font-bold text-white">Footer Links</h1>
+                    <Footer preview={true} refreshKey={footerRefreshKey}/>
                 </div>
-                <div>
-                    <h1>Contact Links</h1>
-                    <ContactSectionComponent/>
+                <div className="mt-2">
+                    <h1 className="text-2xl font-bold text-white">Contact Links</h1>
+                    <ContactSectionComponent preview={true} refreshKey={contactRefreshKey}/>
                 </div>
             </div>
         </>

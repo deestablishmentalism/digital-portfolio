@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react"
 import { NavLink } from "react-router-dom"
 import { SocialsIconMapper } from "../utils/IconMapper"
-export default function ContactSectionComponent() {
+export default function ContactSectionComponent({preview=false,refreshKey}) {
     const [links, setLinks] = useState([])
     useEffect(()=> {
         async function fetchLinks() {
@@ -15,8 +15,7 @@ export default function ContactSectionComponent() {
             }
         }
         fetchLinks()
-    },[])
-    console.log(links)
+    },[refreshKey])
     return(
         <>
             <div>
@@ -34,12 +33,12 @@ export default function ContactSectionComponent() {
                                     key={link._id}
                                     to={hrefString + link.link}
                                     target="_blank"
-                                    className="w-full flex items-center gap-2
+                                    className={`w-full flex items-center gap-2
                                             text-white
                                             p-2 rounded border-2 border-slate-800
-                                            cursor-pointer hover:bg-slate-800
-                                            hover:text-teal-200"
-                                            justify-center
+                                            ${preview ? "pointer-events-none" : "cursor-pointer"} hover:bg-slate-800
+                                            hover:text-teal-200
+                                            justify-center`}
                                 >
                                     {(() => {
                                         const Icon = SocialsIconMapper(true)[link.social];

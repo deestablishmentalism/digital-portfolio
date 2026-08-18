@@ -4,7 +4,7 @@ import {DevIconsMapper, SocialsIconMapper} from "../utils/IconMapper";
 import {Checkbox} from "@/components/ui/checkbox"
 import {Label} from "@/components/ui/label"
 import SpinnerComponent from "./SpinnerComponent";
-export default function Footer({preview=false, editMode = null}) {
+export default function Footer({preview=false, editMode = null, refreshKey}) {
     const [links, setLinks] = useState([]);
     useEffect(()=> {
         async function fetchLinks() {
@@ -18,7 +18,7 @@ export default function Footer({preview=false, editMode = null}) {
             }
         }
         fetchLinks();
-    },[]);
+    },[refreshKey]);
     const clickHandler = (e)=> {
         if(preview) e.preventDefault();
     }
@@ -40,7 +40,7 @@ export default function Footer({preview=false, editMode = null}) {
                                         <div key={link._id} className="flex items-center gap-1 text-teal-200">
                                             <NavLink to={isMail ? `mailto:${link.link}` : link.link} target="_blank" 
                                             className={`flex items-center 
-                                            p-1 rounded-full border-2 border-slate-800 ${preview ? "cursor-not-allowed" : 
+                                            p-1 rounded-full border-2 border-slate-800 ${preview ? "pointer-events-none" : 
                                             "cursor-pointer hover:bg-slate-800 hover:text-teal-200"}`}>
                                                 {(()=>{
                                                     const Icon = SocialsIconMapper(false)[link.social];
@@ -53,7 +53,7 @@ export default function Footer({preview=false, editMode = null}) {
                                 })
                                 }
                         </div>
-                        <NavLink to="/login" className={`font-sub-header-text text-[12px] ${preview ? "cursor-not-allowed" : "cursor-pointer hover:text-teal-400"}`}
+                        <NavLink to="/login" className={`font-sub-header-text text-[12px] ${preview ? "pointer-events-none" : "cursor-pointer hover:text-teal-400"}`}
                             onClick={clickHandler}
                         >Admin Login</NavLink>
                     </div>
