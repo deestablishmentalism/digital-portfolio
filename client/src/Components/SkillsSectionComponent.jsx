@@ -3,6 +3,7 @@ import { DevIconsMapper } from "../utils/IconMapper";
 import {Checkbox} from "@/components/ui/checkbox"
 import {Label} from "@/components/ui/label"
 import SpinnerComponent from "./SpinnerComponent";
+import { useToastMessage } from "./ToastMessage";
 const DIV_WIDTH = 800;
 
 export default function SkillsSectionComponent({preview=false, editMode = null}) {
@@ -102,7 +103,7 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
             {editMode !== null && editMode ?
                 <EditMode skills={skills}/>
                 :
-                <div className={`flex ${preview ? "flex-wrap" : ""} justify-between flex-wrap md:flex-nowrap`}>
+                <div className={`flex ${preview ? "flex-wrap flex-1" : ""} justify-between flex-wrap md:flex-nowrap`}>
                     <DisplaySkills items={frontend} title="Front-End" preview={preview} builder={skillBuilder} total={projects.length}/>
                     <DisplaySkills items={backend} title="Back-End" preview={preview} builder={skillBuilder} total={projects.length}/>
                     <DisplaySkills items={languages} title="Languages" preview={preview} builder={skillBuilder} total={projects.length}/>
@@ -116,7 +117,7 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
 function DisplaySkills({items, title, preview, builder, total}) {
     return(
         <>
-            <div className={`m-2 p-4 border-1 border-slate-900 rounded ${preview ? "w-80" : "w-full"}`}>
+            <div className={`m-2 p-4 border-1 border-slate-900 rounded ${preview ? "w-40" : "w-full"}`}>
                 <span className="text-teal-500 text-xs">{title}</span>
                 {items.length === 0
                     ? <div>
@@ -157,11 +158,14 @@ function SkillItem({slug, mastery, preview}) {
 
     return (
         <div className="relative px-2 py-1 bg-transparent rounded-full flex items-center gap-2 border-2 border-slate-800 overflow-hidden">
-
-            <div
-                className="absolute inset-y-0 left-0 bg-radial from-teal-600/70 via-teal-800/70 to-teal-950/70 rounded-full transition-[width] duration-700 ease-out"
-                style={{width: `${progress}%`}}
-            />
+            {!preview && (
+                <div
+                    className="absolute inset-y-0 left-0 bg-radial from-teal-600/70 via-teal-800/70 to-teal-950/70 rounded-full transition-[width] duration-700 ease-out"
+                    style={{width: `${progress}%`}}
+                />   
+            )
+            }
+            
 
             <div className="relative flex items-center gap-2">
                 {Icon && <Icon className="size-5" />}
@@ -170,7 +174,7 @@ function SkillItem({slug, mastery, preview}) {
                     {slug}
                 </span>
 
-                {mastery > 0 && (
+                {!preview && mastery > 0 && (
                     <span className="text-[10px] text-teal-400">
                         {mastery}%
                     </span>
@@ -180,6 +184,7 @@ function SkillItem({slug, mastery, preview}) {
     );
 }
 function EditMode({skills}) {
+    const showToastMessage = useToastMessage()
     const [languages, setLanguages] = useState([])
     const [frontend, setFrontend] = useState([])
     const [backend, setBackend] = useState([])
@@ -188,7 +193,7 @@ function EditMode({skills}) {
     const [selected, setSelected] = useState({
         frontend: skills?.frontend || [],
         backend: skills?.backend || [],
-        languages: skills?.langauges || [],
+        languages: skills?.languages || [],
         tools: skills?.tools || [],
     })
     useEffect(()=> {
@@ -237,22 +242,23 @@ function EditMode({skills}) {
                     skills: {
                         frontend: selected.frontend,
                         backend: selected.backend,
-                        langauges: selected.languages,
+                        languages: selected.languages,
                         tools: selected.tools,
                     },
                 }),
             });
             const data = await response.json();
             if(!response.ok) throw new Error("ERR: " + response.status);
+            showToastMessage(data.success, data.message);
             setSelected({
-                frontend: data.frontend || [],
-                backend: data.backend || [],
-                languages: data.langauges || [],
-                tools: data.tools || [],
+                frontend: data.data.frontend || [],
+                backend: data.data.backend || [],
+                languages: data.data.langauges || [],
+                tools: data.data.tools || [],
             })
         }
         catch(error) {
-            console.error("Error saving skills: " + error.message);
+            showToastMessage(false, error.message)
         }
         finally {
             setIsSaving(false)
@@ -268,12 +274,12 @@ function EditMode({skills}) {
                     <SkillCheckBoxes items={tools} title="Tools&Others" selected={selected.tools} onToggle={toggleSkill("tools")}/>
                 </div>
                 <div className="m-2 flex justify-end">
-                    <button type="submit" className="appearance-none pt-[0.5px] px-1 border-1 text-centerborder-slate-800 rounded 
+                    <button type="submit" className="px-2 py-1 border-1 border-slate-900 text-[11px] rounded 
                     cursor-pointer hover:bg-slate-800 hover:text-teal-200"
                         onClick={handleSubmit}
                         disabled={isSaving}
                     >
-                        {isSaving ? <SpinnerComponent width="4" height="4" /> : <span className="text-[11px] leading-none">Save</span>}
+                        {isSaving ? <SpinnerComponent width="4" height="4" /> : "Save"}
                     </button>
                 </div>                
             </div>

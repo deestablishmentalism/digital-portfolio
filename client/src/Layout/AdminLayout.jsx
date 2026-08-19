@@ -12,7 +12,7 @@ export default function AdminLayout() {
                         <AdminNavLink to="/admin" end>Dashboard</AdminNavLink>
                         <AdminNavLink to="/admin/project">Projects</AdminNavLink>
                         <AdminNavLink to="/admin/links">Links</AdminNavLink>
-                        <AdminNavLink to="/admin/contents">Contents</AdminNavLink> 
+                        <AdminNavLink to="/admin/skills">Skills</AdminNavLink> 
                         <AdminNavLink to="/admin/personal-info">Personal Info</AdminNavLink>
                     </ul>
                 </nav>

@@ -9,7 +9,7 @@ import {Toaster} from "@/components/ui/toast"
 const AdminDashboard = React.lazy(()=> import("./Pages/Admin/Dashboard"))
 const AdminProject = React.lazy(()=> import("./Pages/Admin/Project"))
 const AdminLink = React.lazy(()=> import("./Pages/Admin/Links"))
-const AdminContent = React.lazy(()=> import("./Pages/Admin/Content"))
+const AdminSkills = React.lazy(()=> import("./Pages/Admin/Skills"))
 const AdminPersonalInfo = React.lazy(()=> import("./Pages/Admin/PersonalInfo"))
 
 const Home = React.lazy(()=> import("./Pages/Home"))
@@ -26,7 +26,7 @@ const router = createBrowserRouter([
       {index: true, element: <AdminDashboard/> },
       {path: "project", element: <AdminProject/>},
       {path: "links", element: <AdminLink/>},
-      {path: "contents", element: <AdminContent/>},
+      {path: "skills", element: <AdminSkills/>},
       {path: "personal-info", element: <AdminPersonalInfo/>}
     ]
   },
