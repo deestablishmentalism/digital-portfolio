@@ -10,7 +10,7 @@ const skillSchema = new mongoose.Schema({
             type: [String],
             required: true,
         },
-        langauges: {
+        languages: {
             type: [String],
             required: true,
         },
