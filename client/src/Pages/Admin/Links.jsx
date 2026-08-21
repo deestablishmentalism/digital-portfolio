@@ -11,10 +11,12 @@ import axios from "axios";
 import {useToastMessage} from "../../Components/ToastMessage"
 import Footer from "../../Components/Footer"
 import ContactSectionComponent from "../../Components/ContactSectionComponent"
+import DeleteConfirmationModal from "../../Components/DeleteConfirmationModal";
 export default function Links() {
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isOpenEdit, setIsOpenEdit] = useState(false)
     const [editId, setEditId] = useState(null)
+    const [deleteData, setDeleteData] = useState(null)
     const [links, setLinks] = useState([])
     const [isFetching, setIsFetching] = useState(true);
     const [contactRefreshKey, setContactRefreshKey] = useState(0)
@@ -57,6 +59,27 @@ export default function Links() {
                             setFooterRefreshKey(prev=>prev+1)
                         }}/>
                     )}
+                    {deleteData && (
+                        <DeleteConfirmationModal data={{
+                            id: deleteData._id,
+                            title: deleteData.social
+                        }}
+                            open={!!deleteData}
+                            onOpenChange={(open) => {
+                                if (!open) {
+                                    setDeleteData(null)
+                                }
+                            }}
+                            onDelete={(data)=> {
+                                setLinks(prev=> 
+                                    prev.filter(link=> link._id !== data._id)
+                                )
+                                setContactRefreshKey(prev=>prev+1)
+                                setFooterRefreshKey(prev=>prev+1)
+                                setDeleteData(null)
+                            }}
+                        />
+                    )}
                 </div>
                 <div className="mt-2 p-2">
                     <h1 className="text-2xl font-bold text-white">My Current links</h1>
@@ -72,9 +95,9 @@ export default function Links() {
                                     const date = new Date(link.updatedAt ?? link.createdAt);
                                     const isEditing = editId === link._id;
                                         return (
-                                            <div key={link._id} className="group m-2 card-light font-bold cursor-pointer relative flex-1">
+                                            <div key={link._id} className="group m-2 card-light font-bold cursor-pointer relative w-150">
                                                 <div 
-                                                className={`absolute top-5 right-35 flex gap-3 z-10
+                                                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-3 z-10
                                                     ${isEditing
                                                         ? "opacity-0 pointer-events-none"
                                                         : "opacity-0 group-hover:opacity-100 pointer-events-auto"
@@ -85,8 +108,10 @@ export default function Links() {
                                                     >
                                                         <Pencil strokeWidth={3}/>    
                                                     </div>
-                                                    <div className="p-2 rounded border-1 bg-red-600 hover:bg-red-800 text-white">
-                                                        <Trash strokeWidth={3}/>    
+                                                    <div className="p-2 rounded border-1 bg-red-600 hover:bg-red-800 text-white"
+                                                        onClick={()=> setDeleteData(link)}
+                                                    >
+                                                        <Trash strokeWidth={3} />    
                                                     </div>
                                                 </div>
                                                 <div className={`flex ${isEditing ? "": "group-hover:blur-[1px]"}`}>
@@ -112,10 +137,7 @@ export default function Links() {
                                                         :
                                                         (
                                                         <div className="p-2 flex flex-col items-center justify-center">
-                                                            <span className="m-1 p-1 flex items-center">{link.link}</span> 
-                                                            {
-
-                                                            }   
+                                                            <span className="m-1 p-1 text-center">{returnPhoneNumber(link.social).toUpperCase()}</span>  
                                                             <span>
                                                             {link.updatedAt != null ? "Updated entry at " : "Created entry at "}
                                                             <span>
@@ -151,6 +173,11 @@ export default function Links() {
         </>
     );
 }
+function returnPhoneNumber(text) {
+    return typeof text === "string"
+    ? text.replace(/phonenumber/g, "phone number") :
+    value
+}
 function EditLink({link, onClick, onSave}) {
     const showMessage = useToastMessage()
     const [payLoad, setPayLoad] = useState(link)
@@ -182,7 +209,7 @@ function EditLink({link, onClick, onSave}) {
                         <Label>Edit Link</Label>
                         <Input type="text" value={payLoad.link} 
                         onChange={(e)=> setPayLoad({...payLoad, link: e.target.value})} 
-                        className="bg-white rounded w-80"/>        
+                        className="bg-white rounded w-100"/>        
                     </div>
                     <div className="ml-2 flex flex-col">
                         <div className="flex">

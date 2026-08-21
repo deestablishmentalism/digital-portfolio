@@ -44,7 +44,7 @@ export default function ContactSectionComponent({preview=false,refreshKey}) {
                                         const Icon = SocialsIconMapper(true)[link.social];
                                         return Icon ? <Icon className="w-10 h-10 md:w-15 md:h-15" /> : null;
                                     })()}
-                                    <span className="text-[10px] sm:text-[11px] md:text-[13px] font-bold">{link?.displayname ?? link.link}</span>
+                                    <span className="text-[10px] sm:text-[11px] md:text-[13px] font-bold">{returnPhoneNumber(link.social).toUpperCase()}</span>
                                 </NavLink>
                                 )
                             })
@@ -56,4 +56,9 @@ export default function ContactSectionComponent({preview=false,refreshKey}) {
             </div>
         </>
     );
+}
+function returnPhoneNumber(text) {
+    return typeof text === "string"
+    ? text.replace(/phonenumber/g, "phone number")
+    : text;
 }

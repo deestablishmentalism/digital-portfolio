@@ -105,3 +105,20 @@ export async function saveLink(req, res) {
         })
     }
 }
+export async function deleteLink(req,res) {
+    try {
+        const {id} = req.body;
+        const link = await Link.findByIdAndDelete(id)
+        res.status(200).json({
+            success: true,
+            message: "Link deleted successfully",
+            data: link
+        });
+    }
+    catch(error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error: " + error.message
+        })
+    }
+}
