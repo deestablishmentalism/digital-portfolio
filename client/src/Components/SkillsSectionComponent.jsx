@@ -14,7 +14,7 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
     const [skills, setSkills] = useState([])
     const [projects, setProjects] = useState([])
     const [skillBuilder, setSkillBuilder] = useState({})
-    const languages = skills?.langauges || []
+    const languages = skills?.languages || []
     const frontend = skills?.frontend || []
     const backend = skills?.backend || []
     const tools = skills?.tools || []
