@@ -22,7 +22,7 @@ import {Checkbox} from "@/components/ui/checkbox"
 import { useEffect, useState, Fragment } from "react";
 import { SocialsIconMapper } from "../utils/IconMapper";
 import SpinnerComponent from "./SpinnerComponent"
-import axios from "axios"
+import api from "../api/axios"
 import {useToastMessage} from "./ToastMessage"
 export default function AddLinks({open, onOpenChange, onSave}) {
     const showToastMessage = useToastMessage();
@@ -35,13 +35,11 @@ export default function AddLinks({open, onOpenChange, onSave}) {
     useEffect(()=> {
         async function fetchSocials() {
             try {
-                const response = await fetch("/api/socials");
-                const data = await response.json();
-                if(!response.ok) throw new Error("ERR " + response.status);
-                setSocials(Object.values(data) || []);
+                const response = await api.get("/socials");
+                setSocials(Object.values(response.data) || []);
             }
             catch(error) {
-                console.error("Failed to fetch socials: " + error.message);
+                showToastMessage(false, error.message)
             }
         }
         fetchSocials();
@@ -56,7 +54,7 @@ export default function AddLinks({open, onOpenChange, onSave}) {
                 in_footer: inFooter,
                 in_contact: inContact
             };
-            const response = await axios.post("/api/links", body);
+            const response = await api.post("/links", body);
             if(!response.status === 201) throw new Error("ERR: " + response.status);
             showToastMessage(response.data.success, response.data.message);
             onSave(response.data.data);

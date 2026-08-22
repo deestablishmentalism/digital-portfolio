@@ -17,13 +17,13 @@ function Home() {
                 <div id="projects" className="home-container">
                     <h1 className="m-2 text-2xl font-sub-header-text text-white"> Projects</h1>
                     <div className="flex flex-wrap w-full overflow-y-auto scrollable">
-                        <ProjectsSectionComponent/>   
+                        <ProjectsSectionComponent preview={false}/>   
                     </div>
                 </div>
                 <div id="contacts" className="home-container">
                     <h1 className="m-2 text-2xl font-sub-header-text text-white"> Contacts</h1>
                     <div className="p-2 w-full">
-                        <ContactSectionComponent/>
+                        <ContactSectionComponent preview={false}/>
                     </div>
                 </div>
             </div>

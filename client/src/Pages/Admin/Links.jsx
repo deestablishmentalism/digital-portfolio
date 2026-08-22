@@ -12,7 +12,9 @@ import {useToastMessage} from "../../Components/ToastMessage"
 import Footer from "../../Components/Footer"
 import ContactSectionComponent from "../../Components/ContactSectionComponent"
 import DeleteConfirmationModal from "../../Components/DeleteConfirmationModal";
+import api from "../../api/axios";
 export default function Links() {
+    const showToastMessage = useToastMessage()
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isOpenEdit, setIsOpenEdit] = useState(false)
     const [editId, setEditId] = useState(null)
@@ -24,13 +26,11 @@ export default function Links() {
     useEffect(()=> { 
         async function fetchLinks() {
             try {
-                const response = await fetch("/api/links");
-                const data = await response.json();
-                if(!response.ok) throw new Error("ERR " + response.status);
-                setLinks(data);
+                const response = await api.get("/links/admin");
+                setLinks(response.data);
             }
             catch(error) {
-                console.error(error.message);
+                showToastMessage(false, error.message)
             }
             finally {
                 setIsFetching(false);
@@ -179,23 +179,23 @@ function returnPhoneNumber(text) {
     value
 }
 function EditLink({link, onClick, onSave}) {
-    const showMessage = useToastMessage()
+    const showToastMessage = useToastMessage()
     const [payLoad, setPayLoad] = useState(link)
     const [isSaving, setIsSaving] = useState(false)
 
     const handleSave = async () => {
         try {
             setIsSaving(true)
-            const response = await axios.put("/api/links", payLoad, {
+            const response = await api.put("/links", payLoad, {
                 headers: {
                     "Content-Type" : "application/json"
                 }
             });
-            showMessage(response.data.success, response.data.message);
+            showToastMessage(response.data.success, response.data.message);
             onSave(response.data.data)
         }
         catch(error) {
-            showMessage(false, error.message);
+            showToastMessage(false, error.message);
         }
         finally {
             setIsSaving(false)

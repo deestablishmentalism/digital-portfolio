@@ -4,6 +4,7 @@ import {Checkbox} from "@/components/ui/checkbox"
 import {Label} from "@/components/ui/label"
 import SpinnerComponent from "./SpinnerComponent";
 import { useToastMessage } from "./ToastMessage";
+import api from "../api/axios";
 const DIV_WIDTH = 800;
 
 export default function SkillsSectionComponent({preview=false, editMode = null}) {
@@ -21,9 +22,8 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
     useEffect(()=> {
         async function fetchSkills() {
             try {
-                const response = await fetch("/api/skills");
-                if(!response.ok) throw new Error("ERR: " + response.status);
-                setSkills(await response.json());
+                const response = preview ? await api.get("/skills/admin") : await api.get("/skills");
+                setSkills(response.data);
             }
             catch(error) {
                 console.error("Error fetching skills: " + error.message);
@@ -34,17 +34,15 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
     useEffect(()=> {
         async function fetchProjects() {
             try {
-                const response = await fetch("/api/projects")
-                if(!response.ok) throw new Error("ERR: " + response.status)
-                const data = await response.json()
+                const response = await api.get("/projects")
                 const counts = {}
-                for (const project of data) {
+                for (const project of response.data) {
                     for (const language of project.languages || []) {
                         const slug = language.toLowerCase()
                         counts[slug] = (counts[slug] || 0) + 1
                     }
                 }
-                setProjects(data)
+                setProjects(response.data)
                 setSkillBuilder(counts)
             }
             catch(error) {

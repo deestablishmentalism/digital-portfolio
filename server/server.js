@@ -9,6 +9,7 @@ import linkRoutes from "./src/routes/linkRoutes.js"
 import socialsRoutes from "./src/routes/socialsRoutes.js"
 import skillRoutes from "./src/routes/skillRoutes.js"
 import personalInfoRoutes from "./src/routes/personalInfoRoutes.js"
+import session from "express-session";
 import { connectDB } from "./config/db.js"
 dotenv.config();
 
@@ -24,6 +25,16 @@ connectDB();
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60
+  }
+}))
 app.use("/api/projects", projectRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tech", techRoutes);

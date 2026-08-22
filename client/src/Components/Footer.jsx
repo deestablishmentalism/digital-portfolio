@@ -4,17 +4,19 @@ import {DevIconsMapper, SocialsIconMapper} from "../utils/IconMapper";
 import {Checkbox} from "@/components/ui/checkbox"
 import {Label} from "@/components/ui/label"
 import SpinnerComponent from "./SpinnerComponent";
+import api from "../api/axios";
+import { useToastMessage } from "./ToastMessage";
 export default function Footer({preview=false, editMode = null, refreshKey}) {
+    const showToastMessage = useToastMessage()
     const [links, setLinks] = useState([]);
     useEffect(()=> {
         async function fetchLinks() {
             try {
-                const response = await fetch('/api/links');
-                const data = await response.json();
-                setLinks(data);
+                const response = preview ? await api.get('/links/admin') : await api.get("/links");
+                setLinks(response.data);
             }
             catch(error) {
-                console.error("Failed to fetch links: " + error.message);
+                showToastMessage(false, error.message)
             }
         }
         fetchLinks();
@@ -98,14 +100,13 @@ function EditMode({links, setLinks}) {
     const handleSubmit = async ()=> {
         setIsSaving(true)
         try {
-            const response = await fetch("/api/links/footer", {
+            const response = await api.put("/links/footer", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ids: selectedIds }),
             });
-            const data = await response.json();
-            if(!response.ok) throw new Error("ERR: " + response.status);
-            setLinks(data);
+            showToastMessage(response.data.success, response.data.message)
+            setLinks(response.data.data);
         }
         catch(error) {
             console.error("Error saving footer links: " + error.message);

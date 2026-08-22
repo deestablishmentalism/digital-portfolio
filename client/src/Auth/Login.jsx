@@ -1,11 +1,13 @@
 import {useState} from 'react'
 import { useNavigate, NavLink } from 'react-router-dom';
 import {Eye, EyeClosed, ArrowBigLeft} from 'lucide-react'
-import axios from "axios"
+import api from '../api/axios';
 import { Suspense } from 'react';
 import SpinnerComponent from '../Components/SpinnerComponent';
 import {Button} from "@/components/ui/button"
+import { useToastMessage } from '../Components/ToastMessage';
 export default function Login() {
+    const showToastMessage = useToastMessage()
     const navigate = useNavigate();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -17,17 +19,18 @@ export default function Login() {
         e.preventDefault();
         setIsLoggingIn(true);
         try {
-            const response = await axios.post("/api/users/logging-in", payLoad,{
+            const response = await api.post("/users/logging-in", payLoad,{
                 headers: {
                     "Content-Type" : "application/json"
                 }
             });
+            showToastMessage(response.data.success, response.data.message)
             if(response.data.success) {
                 navigate("/admin");
             }
         }
         catch(error) {
-            console.error("Handling Login failed");
+            showToastMessage(false,error.message)
         }
         finally {
             setIsLoggingIn(false);

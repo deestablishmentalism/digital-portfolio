@@ -69,7 +69,11 @@ export async function saveFooterLinks(req, res) {
             await Link.updateMany({_id: {$in: linkIds}}, {in_footer: true});
         }
         const links = await Link.find({});
-        res.status(200).json(links);
+        res.status(200).json({
+            success: true,
+            message: "Links successfully updated!",
+            data: links
+        });
     }
     catch(error) {
         res.status(500).json({

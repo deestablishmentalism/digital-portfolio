@@ -5,7 +5,7 @@ export function SocialsIconMapper(colored=false) {
     const socialIcons = {
         facebook: FaIcons.FaFacebook,
         messenger: colored ? DevIcons.Messenger : FaIcons.FaFacebookMessenger,
-        discord: colored ? DevIcons.Discord : FaIcons.FaDiscord,
+        discord: colored ? DevIcons.DiscordIcon : FaIcons.FaDiscord,
         github: colored ? DevIcons.GithubIcon : FaIcons.FaGithub,
         gmail: colored ? DevIcons.GoogleGmail : SiIcons.SiGmail,
         phonenumber:  FaIcons.FaPhoneAlt,

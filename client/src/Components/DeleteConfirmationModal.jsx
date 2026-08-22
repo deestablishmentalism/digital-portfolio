@@ -7,7 +7,7 @@ import {Button} from "@/components/ui/button"
 import { useState } from "react";
 import { useToastMessage } from "./ToastMessage";
 import SpinnerComponent from "./SpinnerComponent";
-import axios from "axios";
+import api from "../api/axios";
 export default function DeleteConfirmationModal({open, onOpenChange, data, onDelete}) {
     const showToastMessage = useToastMessage();
     const [isDeleting, setIsDeleting] = useState(false)
@@ -17,7 +17,7 @@ export default function DeleteConfirmationModal({open, onOpenChange, data, onDel
             const payLoad = {
                 id: data.id
             }
-            const response = await axios.delete("/api/links",{
+            const response = await api.delete("/api/links",{
                 data: payLoad
             });
             if(!response.status === 200) throw new Error("ERR: " + response.status)

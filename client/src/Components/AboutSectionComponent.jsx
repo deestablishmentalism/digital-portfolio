@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react"
+import api from "../api/axios";
 export default function AboutSectionComponent({preview=false}) {
     const [personalInfo, setPersonalInfo] = useState(null)
     useEffect(() => {
         async function fetchPersonalInfo() {
             try {
-                const response = await fetch("/api/personal-info");
-                const data = await response.json();
-
-                setPersonalInfo(data.data);
+                const response = preview ? await api.get("/personal-info/admin") : await api.get("/personal-info");
+                setPersonalInfo(response.data.data);
             } catch (error) {
                 console.error(error);
             }

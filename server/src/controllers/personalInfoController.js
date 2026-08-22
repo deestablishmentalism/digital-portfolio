@@ -50,6 +50,7 @@ export async function updatePersonalInfo(req, res) {
         await personalInfo.save();
         res.status(200).json({
             success: true,
+            message: "Successfully updated my personal information!",
             data: personalInfo
         });
     }
@@ -101,6 +102,7 @@ export async function uploadProfilePicture(req, res) {
 
         res.status(200).json({
             success: true,
+            message: "Successfully updated profile picture!",
             data: personalInfo
         });
     }

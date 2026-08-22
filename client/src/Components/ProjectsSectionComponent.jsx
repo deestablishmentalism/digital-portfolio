@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useLayoutEffect, useRef } from "react";
+import api from "../api/axios";
 function FitText({ text, baseSize = 24, minSize = 10 }) {
     const ref = useRef(null);
     const [size, setSize] = useState(baseSize);
@@ -39,10 +40,8 @@ export default function ProjectsSectionComponent({preview=false}) {
     useEffect(()=>{
         async function fetchProjects() {
             try {
-                const response = await fetch("/api/projects");
-                const data = await response.json();
-                if(!response.ok) throw new Error("ERR: " + response.status);
-                setProjects(data || [])
+                const response = preview ? await api.get("/projects/admin") : await api.get("/projects");
+                setProjects(response.data || [])
             }
             catch(error) {
                 console.error(error.message);

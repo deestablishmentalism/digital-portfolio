@@ -15,7 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import axios from "axios"
+import api from "../../api/axios"
+import { useToastMessage } from "../../Components/ToastMessage"
+const showToastMessage = useToastMessage()
 export default function PersonalInfo() {
     const [personalInfo, setPersonalInfo] = useState(null);
     const [editMode, setEditMode] = useState(false);
@@ -26,14 +28,10 @@ export default function PersonalInfo() {
     useEffect(() => {
         async function fetchPersonalInfo() {
             try {
-                const response = await fetch("/api/personal-info");
-                if (!response.ok) {
-                    throw new Error("Failed to fetch personal information");
-                }
-                const data = await response.json();
-                setPersonalInfo(data.data);
+                const response = await api.get("/personal-info/admin");
+                setPersonalInfo(response.data.data);
             } catch (error) {
-                console.error(error);
+                showToastMessage(false, error.message)
             }
         }
         fetchPersonalInfo();
@@ -97,19 +95,15 @@ export default function PersonalInfo() {
         setIsSavingProfile(true)
         try {
             const image = await resizeAndEncode(selectedFile);
-            const response = await fetch("/api/personal-info/profile", {
+            const response = await api.put("/personal-info/profile", {
                 method: "PUT",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({image}),
             });
-            const data = await response.json();
-            if(!response.ok) {
-                throw new Error(data.message || "Failed to save profile picture");
-            }
-            setPersonalInfo(data.data);
+            setPersonalInfo(response.data.data);
             removeFile();
         } catch (error) {
-            console.error(error);
+            showToastMessage(false, error.message)
         } finally {
             setIsSavingProfile(false);
         }
@@ -197,7 +191,11 @@ export default function PersonalInfo() {
                 </div>
                 <div className="m-4 h-100 w-full scrollable">
                     {editMode ? (
-                        <EditMode personalInfo={personalInfo} onSave={(data) => setPersonalInfo(data)}/>
+                        <EditMode personalInfo={personalInfo} 
+                        onSave={(data) => {
+                            setPersonalInfo(data)
+                            setEditMode(false) 
+                        }}/>
                     )
                     : (
                     <div className="flex flex-col admin-container">
@@ -268,18 +266,16 @@ function EditMode({personalInfo, onSave}) {
         e.preventDefault();
         setIsSaving(true)
         try {
-            const response = await axios.put("/api/personal-info", payLoad, {
+            const response = await api.put("/personal-info", payLoad, {
                 headers: {
                     "Content-Type" : "application/json"
                 },
             })
-            if(!response.data?.success) {
-                throw new Error(response.data?.message || "Failed to save personal information")
-            }
+            showToastMessage(response.data.success, response.data.message)
             onSave(response.data.data)
         }
         catch(error) {  
-            console.error(error.message)
+            showToastMessage(false, error.message)
         }
         finally {
             setIsSaving(false)

@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { User } from "../models/user.js";
+import session from "express-session";
 
 export async function loginUser(req, res) {
     try {
@@ -11,9 +12,32 @@ export async function loginUser(req, res) {
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
-        res.status(200).json({ success: true, message: "Login successful" });
-    } catch (error) {
-        console.error(`Error in loginUser: ${error.message}`);
+        req.session.regenerate(err=> {
+            if(err) throw new Error("Logging in failed");
+            req.session.user_id=user._id;
+            req.session.logged_in=true;
+            res.status(200).json({ success: true, message: "Login successful" });
+        })
+    } 
+    catch (error) {
         res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+export async function logoutUser(req,res) {
+    try {
+        req.session.destroy(err=> {
+            if(err) throw new Error("Failed to logout!")
+            res.clearCookie("connect.sid")
+            res.status(200).json({
+                success: true,
+                message: "Successfully logged out!"
+            })
+        })
+    }
+    catch(error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error: "+ error.message
+        })
     }
 }

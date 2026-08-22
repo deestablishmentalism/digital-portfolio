@@ -21,11 +21,13 @@ import {
   DialogContent,
   DialogHeader,
 } from "@/components/ui/dialog"
-import { X, Plus, Trash2 } from "lucide-react"
+import { X, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react"
 import SpinnerComponent from "./SpinnerComponent"
-import axios from "axios"
+import api from "../api/axios"
+import { useToastMessage } from "./ToastMessage"
 import { DevIconsMapper} from "../utils/IconMapper"
 export default function AddProjectModal({ open, onOpenChange }) {
+  const showToastMessage = useToastMessage()
   const [isAdding, setIsAdding] = useState(false)
   const [uploadType, setUploadType] = useState("")
   const [projectType, setProjectType] = useState("")
@@ -51,15 +53,13 @@ export default function AddProjectModal({ open, onOpenChange }) {
   useEffect(()=>{
     async function fetchTech() {
       try {
-        const response = await fetch("/api/tech");
-        const data = await response.json();
-        if (!response.ok) throw new Error("Something went wrong with the response");
-        setLanguagesItems(Object.values(data.languages || {}));
-        setFrontendItems(Object.values(data.frontend || {}));
-        setBackendItems(Object.values(data.backend || {}));
+        const response = await api.get("/tech");
+        setLanguagesItems(Object.values(response.data.languages || {}));
+        setFrontendItems(Object.values(response.data.frontend || {}));
+        setBackendItems(Object.values(response.data.backend || {}));
       }
       catch(error) {
-        console.error(error.message);
+        showToastMessage(false, error.message)
       }
     }
     fetchTech();
@@ -127,7 +127,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
         body.preview = { type: "gallery", images }
       }
 
-      const response = await axios.post("/api/projects", body)
+      const response = await api.post("/projects", body)
       if (!response.created) throw new Error("Adding project failed");
       else window.location.reload
       resetForm()
@@ -181,7 +181,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
 
           <div>
             <Label htmlFor="languages">Frameworks, Technologies & Languages Used</Label>
-            <div className="flex w-full">
+            <div className="flex w-full gap-4">
                 <BuildCheckBoxComponent items={frontendItems} title={"Front-End"} 
                   selectedItems={languages} 
                   handleChecked={handleChecked}
@@ -286,7 +286,7 @@ function BuildCheckBoxComponent({items, title, handleChecked, selectedItems}) {
         onClick={() => setOpen(!open)}
       >
         <Label className="cursor-pointer select-none font-bold">{title}</Label>
-        <span>{open ? "▲" : "▼"}</span>
+        <span>{open ? <ChevronUp/> : <ChevronDown/>}</span>
       </div>
       {open && (
         <div className="absolute top-full left-0 right-0 z-10 mt-1 border rounded-md bg-white shadow-lg scrollable overflow-y-auto max-h-40">
