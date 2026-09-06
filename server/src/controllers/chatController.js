@@ -1,5 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 
+console.log(
+  "Gemini key loaded:",
+  process.env.GEMINI_API_KEY ? "YES" : "NO"
+);
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const sendMessage = async (req, res) => {
@@ -11,9 +15,9 @@ export const sendMessage = async (req, res) => {
 
   try {
     const chat = ai.chats.create({
-      model: "gemini-2.0-flash",
+      model: "gemini-3.7-flash",
       history: history.map((msg) => ({
-        role: msg.role,
+        role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.text }],
       })),
       config: {

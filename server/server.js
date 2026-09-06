@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { v2 as cloudinary } from "cloudinary";
@@ -12,7 +12,6 @@ import personalInfoRoutes from "./src/routes/personalInfoRoutes.js"
 import chatRoutes from "./src/routes/chatRoutes.js"
 import session from "express-session";
 import { connectDB } from "./config/db.js"
-dotenv.config();
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
