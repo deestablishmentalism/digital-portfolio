@@ -9,6 +9,7 @@ import linkRoutes from "./src/routes/linkRoutes.js"
 import socialsRoutes from "./src/routes/socialsRoutes.js"
 import skillRoutes from "./src/routes/skillRoutes.js"
 import personalInfoRoutes from "./src/routes/personalInfoRoutes.js"
+import chatRoutes from "./src/routes/chatRoutes.js"
 import session from "express-session";
 import { connectDB } from "./config/db.js"
 dotenv.config();
@@ -42,4 +43,5 @@ app.use("/api/socials", socialsRoutes);
 app.use("/api/links", linkRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/personal-info", personalInfoRoutes);
+app.use("/api/chat", chatRoutes);
 app.listen(SERVER_PORT);

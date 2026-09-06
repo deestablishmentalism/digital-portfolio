@@ -2,6 +2,7 @@ import ProjectsSectionComponent from "../Components/ProjectsSectionComponent";
 import SkillsSectionComponent from "../Components/SkillsSectionComponent";
 import AboutSectionComponent from "../Components/AboutSectionComponent";
 import ContactSectionComponent from "../Components/ContactSectionComponent";
+import AIChatbot from "../Components/AIChatbot";
 function Home() {
     return(
         <>
@@ -27,6 +28,7 @@ function Home() {
                     </div>
                 </div>
             </div>
+            <AIChatbot />
         </>
     );
 }
