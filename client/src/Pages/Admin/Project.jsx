@@ -13,7 +13,7 @@ export default function Project() {
         async function fetchProjects() {
             try {
                 const response = await api.get("/projects");
-                setProjects(response.data);
+                setProjects(Array.isArray(response.data) ? response.data : []);
             } catch (error) {
                 showToastMessage(false, error.message)
             } finally {

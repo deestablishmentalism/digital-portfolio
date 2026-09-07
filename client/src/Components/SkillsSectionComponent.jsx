@@ -23,7 +23,8 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
         async function fetchSkills() {
             try {
                 const response = preview ? await api.get("/skills/admin") : await api.get("/skills");
-                setSkills(response.data);
+                const data = response.data;
+                setSkills(data && typeof data === "object" && !Array.isArray(data) ? data : {});
             }
             catch(error) {
                 console.error("Error fetching skills: " + error.message);
@@ -35,14 +36,15 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
         async function fetchProjects() {
             try {
                 const response = await api.get("/projects")
+                const projectsData = Array.isArray(response.data) ? response.data : [];
                 const counts = {}
-                for (const project of response.data) {
+                for (const project of projectsData) {
                     for (const language of project.languages || []) {
                         const slug = language.toLowerCase()
                         counts[slug] = (counts[slug] || 0) + 1
                     }
                 }
-                setProjects(response.data)
+                setProjects(projectsData)
                 setSkillBuilder(counts)
             }
             catch(error) {
@@ -197,13 +199,14 @@ function EditMode({skills}) {
     useEffect(()=> {
         async function fetchTech() {
             try {
-                const response = await fetch("/api/tech");
-                const data = await response.json();
-                if(!response.ok) throw new Error("ERR: " + response.status);
-                setFrontend(Object.values(data.frontend || []))
-                setBackend(Object.values(data.backend || []))
-                setLanguages(Object.values(data.languages || []))
-                setTools(Object.values(data.tools || []))
+                const response = await api.get("/tech");
+                const data = response.data;
+                if (data && typeof data === "object" && !Array.isArray(data)) {
+                    setFrontend(Object.values(data.frontend || {}))
+                    setBackend(Object.values(data.backend || {}))
+                    setLanguages(Object.values(data.languages || {}))
+                    setTools(Object.values(data.tools || {}))
+                }
             }
             catch(error) {
                 console.error("Error fetching data: " + error.message);
@@ -229,30 +232,25 @@ function EditMode({skills}) {
                 : prev[category].filter(s => s !== slug),
         }));
     };
-    const handleSubmit = async (e)=> {
+    const handleSubmit = async (e)=>{
         e.preventDefault()
         setIsSaving(true)
         try {
-            const response = await fetch("/api/skills", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    skills: {
-                        frontend: selected.frontend,
-                        backend: selected.backend,
-                        languages: selected.languages,
-                        tools: selected.tools,
-                    },
-                }),
+            const response = await api.put("/skills", {
+                skills: {
+                    frontend: selected.frontend,
+                    backend: selected.backend,
+                    languages: selected.languages,
+                    tools: selected.tools,
+                },
             });
-            const data = await response.json();
-            if(!response.ok) throw new Error("ERR: " + response.status);
+            const data = response.data;
             showToastMessage(data.success, data.message);
             setSelected({
-                frontend: data.data.frontend || [],
-                backend: data.data.backend || [],
-                languages: data.data.langauges || [],
-                tools: data.data.tools || [],
+                frontend: data.data?.frontend || [],
+                backend: data.data?.backend || [],
+                languages: data.data?.languages || [],
+                tools: data.data?.tools || [],
             })
         }
         catch(error) {

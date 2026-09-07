@@ -41,7 +41,7 @@ export default function ProjectsSectionComponent({preview=false}) {
         async function fetchProjects() {
             try {
                 const response = preview ? await api.get("/projects/admin") : await api.get("/projects");
-                setProjects(response.data || [])
+                setProjects(Array.isArray(response.data) ? response.data : [])
             }
             catch(error) {
                 console.error(error.message);

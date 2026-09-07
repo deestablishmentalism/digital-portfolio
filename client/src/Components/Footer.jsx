@@ -101,13 +101,9 @@ function EditMode({links, setLinks}) {
     const handleSubmit = async ()=> {
         setIsSaving(true)
         try {
-            const response = await api.put("/links/footer", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ids: selectedIds }),
-            });
+            const response = await api.put("/links/footer", { ids: selectedIds });
             showToastMessage(response.data.success, response.data.message)
-            setLinks(response.data.data);
+            setLinks(Array.isArray(response.data.data) ? response.data.data : []);
         }
         catch(error) {
             console.error("Error saving footer links: " + error.message);
