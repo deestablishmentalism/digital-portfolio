@@ -1,6 +1,13 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
-import session from "express-session";
+
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 1000 * 60 * 60, // 1 hour
+};
 
 export async function loginUser(req, res) {
     try {
@@ -12,32 +19,31 @@ export async function loginUser(req, res) {
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
-        req.session.regenerate(err=> {
-            if(err) throw new Error("Logging in failed");
-            req.session.user_id=user._id;
-            req.session.logged_in=true;
-            res.status(200).json({ success: true, message: "Login successful" });
-        })
-    } 
+        const token = jwt.sign(
+            { user_id: user._id, username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+        res.cookie("token", token, COOKIE_OPTIONS);
+        res.status(200).json({ success: true, message: "Login successful" });
+    }
     catch (error) {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
-export async function logoutUser(req,res) {
+
+export async function logoutUser(req, res) {
     try {
-        req.session.destroy(err=> {
-            if(err) throw new Error("Failed to logout!")
-            res.clearCookie("connect.sid")
-            res.status(200).json({
-                success: true,
-                message: "Successfully logged out!"
-            })
-        })
+        res.clearCookie("token", COOKIE_OPTIONS);
+        res.status(200).json({
+            success: true,
+            message: "Successfully logged out!"
+        });
     }
-    catch(error) {
+    catch (error) {
         res.status(500).json({
             success: false,
-            message: "Internal server error: "+ error.message
-        })
+            message: "Internal server error: " + error.message
+        });
     }
 }

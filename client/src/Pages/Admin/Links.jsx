@@ -7,7 +7,6 @@ import {Input}  from "@/components/ui/input";
 import {Label} from "@/components/ui/label"
 import {Button} from "@/components/ui/button"
 import {Checkbox} from "@/components/ui/checkbox"
-import axios from "axios";
 import {useToastMessage} from "../../Components/ToastMessage"
 import Footer from "../../Components/Footer"
 import ContactSectionComponent from "../../Components/ContactSectionComponent"
