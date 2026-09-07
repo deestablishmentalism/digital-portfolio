@@ -2,7 +2,7 @@ import {useEffect, useState} from "react"
 import { NavLink } from "react-router-dom"
 import { SocialsIconMapper } from "../utils/IconMapper"
 import api from "../api/axios"
-export default function ContactSectionComponent({preview=false,refreshKey}) {
+export default function ContactSectionComponent({preview=false,refreshKey, onLoad}) {
     const [links, setLinks] = useState([])
     useEffect(()=> {
         async function fetchLinks() {
@@ -13,6 +13,9 @@ export default function ContactSectionComponent({preview=false,refreshKey}) {
             }
             catch(error) {
                 console.error(error.message)
+            }
+            finally {
+                onLoad?.();
             }
         }
         fetchLinks()

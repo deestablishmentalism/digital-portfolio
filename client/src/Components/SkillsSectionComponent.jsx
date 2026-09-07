@@ -7,7 +7,7 @@ import { useToastMessage } from "./ToastMessage";
 import api from "../api/axios";
 const DIV_WIDTH = 800;
 
-export default function SkillsSectionComponent({preview=false, editMode = null}) {
+export default function SkillsSectionComponent({preview=false, editMode = null, onLoad}) {
     const parentRef = useRef(null)
     const innerRef = useRef(null)
     const [scale, setScale] = useState(1)
@@ -15,6 +15,11 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
     const [skills, setSkills] = useState([])
     const [projects, setProjects] = useState([])
     const [skillBuilder, setSkillBuilder] = useState({})
+    const loadCount = useRef(0)
+    const signalLoad = () => {
+        loadCount.current += 1;
+        if (loadCount.current >= 2) onLoad?.();
+    };
     const languages = skills?.languages || []
     const frontend = skills?.frontend || []
     const backend = skills?.backend || []
@@ -28,6 +33,9 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
             }
             catch(error) {
                 console.error("Error fetching skills: " + error.message);
+            }
+            finally {
+                signalLoad();
             }
         }
         fetchSkills();
@@ -49,6 +57,9 @@ export default function SkillsSectionComponent({preview=false, editMode = null})
             }
             catch(error) {
                 console.error("Error fetching projects "+ error.message)
+            }
+            finally {
+                signalLoad();
             }
         }
         fetchProjects();

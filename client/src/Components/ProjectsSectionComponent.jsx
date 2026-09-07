@@ -30,7 +30,7 @@ import SpinnerComponent from "./SpinnerComponent";
 import LazyImageLoader from "../utils/LazyImageLoader";
 import {X, ArrowBigLeft, ArrowBigRight} from "lucide-react"
 import {DevIconsMapper} from "../utils/IconMapper";
-export default function ProjectsSectionComponent({preview=false}) {
+export default function ProjectsSectionComponent({preview=false, onLoad}) {
     const [fetching, setFetching] = useState(true); 
     const [projects, setProjects] = useState([])
     const [isGalleryOpen, setIsGalleryOpen] = useState(false)
@@ -48,6 +48,7 @@ export default function ProjectsSectionComponent({preview=false}) {
             }
             finally {
                 setFetching(false)
+                onLoad?.();
             }
         }
         fetchProjects()

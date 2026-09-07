@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import api from "../api/axios";
-export default function AboutSectionComponent({preview=false}) {
+export default function AboutSectionComponent({preview=false, onLoad}) {
     const [personalInfo, setPersonalInfo] = useState(null)
     useEffect(() => {
         async function fetchPersonalInfo() {
@@ -9,6 +9,8 @@ export default function AboutSectionComponent({preview=false}) {
                 setPersonalInfo(response.data.data);
             } catch (error) {
                 console.error(error);
+            } finally {
+                onLoad?.();
             }
         }
 
