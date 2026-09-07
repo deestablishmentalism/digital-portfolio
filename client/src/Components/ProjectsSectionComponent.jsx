@@ -107,7 +107,7 @@ export default function ProjectsSectionComponent({preview=false}) {
                                 });
                             };
                             return(
-                                <div key={project._id} className="group relative rounded w-80 h-57 bg-black z-1 overflow-hidden 
+                                <div key={project._id} className="group relative rounded w-80 h-57 bg-black z-5 overflow-hidden 
                                 font-header-text text-[11px]" 
                                 onClick={toggleOverlay}
                                 >

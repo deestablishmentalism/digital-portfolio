@@ -142,14 +142,14 @@ export default function AIChatbot() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-1 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Chat Panel */}
       <div
-        className={`fixed bottom-24 right-4 z-50 flex flex-col
+        className={`fixed top-50 right-20 z-1 flex flex-col
           w-[340px] sm:w-[380px] h-[520px] max-h-[80vh]
           rounded-2xl border border-teal-700/50 shadow-2xl overflow-hidden
           bg-gradient-to-b from-slate-900/95 via-teal-950/95 to-slate-900/95
@@ -241,7 +241,7 @@ export default function AIChatbot() {
       <button
         id="ai-chatbot-toggle"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center
+        className={`fixed top-100 right-4 z-1 w-14 h-14 rounded-full flex items-center justify-center
           shadow-lg transition-all duration-300 ease-out
           hover:scale-110 active:scale-95
           ${isOpen
