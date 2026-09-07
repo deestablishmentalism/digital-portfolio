@@ -137,7 +137,7 @@ export default function ProjectsSectionComponent({preview=false}) {
                                             </div>
                                             <div className={`p-2 flex flex-wrap gap-2 justify-center w-full 
                                                 group-hover:opacity-100 ${isOpen ? "opacity-100" : "opacity-0"}`}>
-                                                {!preview && (project.languages.map((language, index)=> {
+                                                {!preview && ((project.languages || []).map((language, index)=> {
                                                     const Icon = DevIconsMapper(false)[language.toLowerCase()];
                                                     return(
                                                         <div key={index}>
