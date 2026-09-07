@@ -26,7 +26,7 @@ export default function Links() {
         async function fetchLinks() {
             try {
                 const response = await api.get("/links/admin");
-                setLinks(response.data);
+                setLinks(Array.isArray(response.data) ? response.data : []);
             }
             catch(error) {
                 showToastMessage(false, error.message)

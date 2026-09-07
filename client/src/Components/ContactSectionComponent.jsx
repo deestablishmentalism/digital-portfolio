@@ -9,7 +9,7 @@ export default function ContactSectionComponent({preview=false,refreshKey}) {
             try {
                 const response = preview ? await api.get("/links/contacts/admin") : await api.get("/links/contacts")
                 if(!response.status === 200) throw new Error("ERR: "+response.status)
-                setLinks(response.data)
+                setLinks(Array.isArray(response.data) ? response.data : [])
             }
             catch(error) {
                 console.error(error.message)

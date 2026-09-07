@@ -13,7 +13,8 @@ export default function Footer({preview=false, editMode = null, refreshKey}) {
         async function fetchLinks() {
             try {
                 const response = preview ? await api.get('/links/admin') : await api.get("/links");
-                setLinks(response.data);
+                const data = response.data;
+                setLinks(Array.isArray(data) ? data : []);
             }
             catch(error) {
                 showToastMessage(false, error.message)
