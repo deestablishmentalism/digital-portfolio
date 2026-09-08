@@ -1,24 +1,53 @@
 import {Outlet} from 'react-router-dom'
 import Footer from '../Components/Footer';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import SpinnerComponent from '../Components/SpinnerComponent';
+import logo from "../assets/logo-animation-12fps.webm";
+
+const TOTAL_SECTIONS = 4;
+
 export default function HomeLayout() {
-    const [logoAnimation, setLogoAnimation] = useState(null);
+    const [logoAnimation, setLogoAnimation] = useState(logo ?? null);
     const [isBurger, setIsBurger] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const loadedCount = useRef(0);
+
+    const handleSectionLoad = useCallback(() => {
+        loadedCount.current += 1;
+        if (loadedCount.current >= TOTAL_SECTIONS) {
+            setIsLoading(false);
+        }
+    }, []);
+
     const scrollToSection = (id)=> {
         document.getElementById(id)?.scrollIntoView({
             behavior: "smooth",
             "block": "center"
         })
     }
-    useEffect(() => {
-        import("../assets/logo-animation-12fps.webm")
-        .then((module) => setLogoAnimation(module.default))
-        .catch(() => setLogoAnimation(null));
-    }, []);
     return(
         <>
+            {isLoading && (
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center
+                    bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+                    {logoAnimation ? (
+                        <video
+                            src={logoAnimation}
+                            autoPlay
+                            muted
+                            playsInline
+                            onError={() => setLogoAnimation(null)}
+                            loop
+                        />
+                    ) : (
+                        <SpinnerComponent width={100} height={100} />
+                    )}
+                    <span className="mt-4 text-sm text-slate-400 font-body-text animate-pulse">
+                        Loading portfolio...
+                    </span>
+                </div>
+            )}
             <div className="min-h-screen flex flex-col relative"> 
                     <header className="p-4 w-full grid-bg text-emerald-400 relative sticky top-0 z-50 shadow">
                         <div className="w-full flex justify-between items-center">
@@ -117,8 +146,8 @@ export default function HomeLayout() {
                         )}
                     </header>  
                 <main className="flex-1">
-                   <Suspense fallback={<SpinnerComponent width={40} height={40} color="black"/>}>
-                        <Outlet/>
+                   <Suspense fallback={null}>
+                        <Outlet context={{ handleSectionLoad }}/>
                     </Suspense>
                 </main>
                 <Footer/>
