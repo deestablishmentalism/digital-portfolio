@@ -108,12 +108,12 @@ export default function ProjectsSectionComponent({preview=false, onLoad}) {
                                 });
                             };
                             return(
-                                <div key={project._id} className="group relative rounded w-80 h-57 bg-black z-5 overflow-hidden 
+                                <div key={project._id} className="group relative rounded w-80 h-57 bg-black z-1 overflow-hidden 
                                 font-header-text text-[11px]" 
                                 onClick={toggleOverlay}
                                 >
                                     {!preview && (
-                                        <div className={`absolute top-0 right-0 z-20 h-full w-full bg-teal-950 text-white 
+                                        <div className={`absolute top-0 right-0 z-1 h-full w-full bg-teal-950 text-white 
                                             -translate-y-4
                                             transition-all
                                             duration-300

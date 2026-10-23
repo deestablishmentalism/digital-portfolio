@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import {MessageCircle, Trash, X} from "lucide-react"
 import api from "../api/axios";
 
 const BOT_AVATAR = "✦";
@@ -139,27 +140,27 @@ export default function AIChatbot() {
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-1 md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      {/* Chat Panel */}
+      {/* Chat Sidebar */}
       <div
-        className={`fixed top-50 right-20 z-1 flex flex-col
-          w-[340px] sm:w-[380px] h-[520px] max-h-[80vh]
-          rounded-2xl border border-teal-700/50 shadow-2xl overflow-hidden
+        className={`fixed top-0 right-0 z-50 flex flex-col
+          w-full md:w-[400px] h-full
+          border-l border-teal-700/50 shadow-2xl overflow-hidden
           bg-gradient-to-b from-slate-900/95 via-teal-950/95 to-slate-900/95
           backdrop-blur-xl
-          transition-all duration-300 ease-out
-          ${isOpen ? "opacity-100 scale-100 translate-y-0 pointer-events-auto" : "opacity-0 scale-95 translate-y-4 pointer-events-none"}
+          transition-transform duration-300 ease-out
+          ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
         style={{
           boxShadow: isOpen
-            ? "0 0 0 1px rgba(20,184,166,0.15), 0 25px 50px -12px rgba(0,0,0,0.7), 0 0 60px rgba(20,184,166,0.07)"
+            ? "0 0 0 1px rgba(20,184,166,0.15), -10px 0 40px rgba(0,0,0,0.5), 0 0 60px rgba(20,184,166,0.07)"
             : undefined,
         }}
       >
@@ -183,19 +184,14 @@ export default function AIChatbot() {
               title="Clear chat"
               className="p-1.5 rounded-lg text-slate-400 hover:text-teal-300 hover:bg-teal-900/40 transition-colors duration-150"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="1 4 1 10 7 10" /><polyline points="23 20 23 14 17 14" />
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-              </svg>
+              <Trash/>
             </button>
             <button
               onClick={() => setIsOpen(false)}
               title="Close"
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-colors duration-150"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <X/>
             </button>
           </div>
         </div>
@@ -241,12 +237,12 @@ export default function AIChatbot() {
       <button
         id="ai-chatbot-toggle"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`fixed top-100 right-4 z-1 w-14 h-14 rounded-full flex items-center justify-center
+        className={`fixed top-1/2 -translate-y-1/2 cursor-pointer right-6 w-14 h-14 rounded-full flex items-center justify-center
           shadow-lg transition-all duration-300 ease-out
           hover:scale-110 active:scale-95
           ${isOpen
-            ? "bg-slate-700 hover:bg-slate-600 shadow-slate-900/50"
-            : "bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-400 hover:to-teal-600 shadow-teal-700/50"
+            ? "z-30 bg-slate-700 hover:bg-slate-600 shadow-slate-900/50"
+            : "z-50 bg-gradient-to-br from-teal-500 to-teal-700 hover:from-teal-400 hover:to-teal-600 shadow-teal-700/50"
           }`}
         style={{
           boxShadow: isOpen
@@ -268,13 +264,9 @@ export default function AIChatbot() {
           className={`transition-all duration-300 ${isOpen ? "rotate-90 scale-90" : "rotate-0 scale-100"}`}
         >
           {isOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X/>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
+            <MessageCircle color="white"/>
           )}
         </span>
       </button>

@@ -96,10 +96,10 @@ export default function HomeLayout() {
                         {/* Mobile navigation */}
                         {isBurger && (
                             <nav className="absolute top-full left-0 md:hidden w-full text-emerald-400 bg-slate-950/70 backdrop-blur-md">
-                                <ul className="w-full flex flex-col items-center">
+                                <ul className="w-full flex flex-col items-center [&>li]:font-header-text">
                                     <li className="w-full">
                                         <button
-                                            className="w-full h-full p-4 cursor-pointer border-b-1 hover:bg-slate-800"
+                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
                                             onClick={() => {
                                                 scrollToSection("about");
                                                 setIsBurger(false);
@@ -110,7 +110,7 @@ export default function HomeLayout() {
                                     </li>
                                     <li className="w-full">
                                         <button
-                                            className="w-full h-full p-4 cursor-pointer border-b-1 hover:bg-slate-800"
+                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
                                             onClick={() => {
                                                 scrollToSection("skills");
                                                 setIsBurger(false);
@@ -121,7 +121,7 @@ export default function HomeLayout() {
                                     </li>
                                     <li className="w-full">
                                         <button
-                                            className="w-full h-full p-4 cursor-pointer border-b-1 hover:bg-slate-800"
+                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
                                             onClick={() => {
                                                 scrollToSection("projects");
                                                 setIsBurger(false);
@@ -132,7 +132,7 @@ export default function HomeLayout() {
                                     </li>
                                     <li className="w-full">
                                         <button
-                                            className="w-full h-full p-4 cursor-pointer hover:bg-slate-800 border-b-1"
+                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer hover:bg-slate-800 border-b-1"
                                             onClick={() => {
                                                 scrollToSection("contacts");
                                                 setIsBurger(false);
