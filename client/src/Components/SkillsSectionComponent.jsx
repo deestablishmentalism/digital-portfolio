@@ -1,83 +1,85 @@
-import { useRef, useLayoutEffect, useState, useEffect } from "react";
+import { useRef, useLayoutEffect, useState, useEffect, useCallback } from "react";
 import { DevIconsMapper } from "../utils/IconMapper";
-import {Checkbox} from "@/components/ui/checkbox"
-import {Label} from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import SpinnerComponent from "./SpinnerComponent";
 import { useToastMessage } from "./ToastMessage";
 import api from "../api/axios";
+
 const DIV_WIDTH = 800;
 
-export default function SkillsSectionComponent({preview=false, editMode = null, onLoad}) {
-    const parentRef = useRef(null)
-    const innerRef = useRef(null)
-    const [scale, setScale] = useState(1)
-    const [parentHeight, setParentHeight] = useState(null)
-    const [skills, setSkills] = useState([])
-    const [projects, setProjects] = useState([])
-    const [skillBuilder, setSkillBuilder] = useState({})
-    const loadCount = useRef(0)
-    const signalLoad = () => {
+export default function SkillsSectionComponent({ preview = false, editMode = null, onLoad }) {
+    const parentRef = useRef(null);
+    const innerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+    const [parentHeight, setParentHeight] = useState(null);
+    const [skills, setSkills] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [skillBuilder, setSkillBuilder] = useState({});
+    const loadCount = useRef(0);
+
+    const signalLoad = useCallback(() => {
         loadCount.current += 1;
         if (loadCount.current >= 2) onLoad?.();
-    };
-    const languages = skills?.languages || []
-    const frontend = skills?.frontend || []
-    const backend = skills?.backend || []
-    const tools = skills?.tools || []
-    useEffect(()=> {
+    }, [onLoad]);
+
+    const languages = skills?.languages || [];
+    const frontend = skills?.frontend || [];
+    const backend = skills?.backend || [];
+    const tools = skills?.tools || [];
+
+    useEffect(() => {
         async function fetchSkills() {
             try {
                 const response = preview ? await api.get("/skills/admin") : await api.get("/skills");
                 const data = response.data;
                 setSkills(data && typeof data === "object" && !Array.isArray(data) ? data : {});
-            }
-            catch(error) {
+            } catch (error) {
                 console.error("Error fetching skills: " + error.message);
-            }
-            finally {
+            } finally {
                 signalLoad();
             }
         }
         fetchSkills();
-    }, [])
-    useEffect(()=> {
+    }, [preview, signalLoad]);
+
+    useEffect(() => {
         async function fetchProjects() {
             try {
-                const response = await api.get("/projects")
+                const response = await api.get("/projects");
                 const projectsData = Array.isArray(response.data) ? response.data : [];
-                const counts = {}
+                const counts = {};
                 for (const project of projectsData) {
                     for (const language of project.languages || []) {
-                        const slug = language.toLowerCase()
-                        counts[slug] = (counts[slug] || 0) + 1
+                        const slug = language.toLowerCase();
+                        counts[slug] = (counts[slug] || 0) + 1;
                     }
                 }
-                setProjects(projectsData)
-                setSkillBuilder(counts)
-            }
-            catch(error) {
-                console.error("Error fetching projects "+ error.message)
-            }
-            finally {
+                setProjects(projectsData);
+                setSkillBuilder(counts);
+            } catch (error) {
+                console.error("Error fetching projects: " + error.message);
+            } finally {
                 signalLoad();
             }
         }
         fetchProjects();
-    }, [])
+    }, [signalLoad]);
+
     useLayoutEffect(() => {
-        if(!preview) return;
+        if (!preview) return;
 
         const updateScale = () => {
-            const parentWidth = parentRef.current.offsetWidth;
+            const parentWidth = parentRef.current?.offsetWidth || DIV_WIDTH;
             setScale(parentWidth / DIV_WIDTH);
         };
 
         updateScale();
 
         const observer = new ResizeObserver(updateScale);
-        observer.observe(parentRef.current);
+        if (parentRef.current) observer.observe(parentRef.current);
         return () => observer.disconnect();
-    }, [preview])
+    }, [preview]);
 
     useLayoutEffect(() => {
         if (!preview || !innerRef.current) {
@@ -87,7 +89,7 @@ export default function SkillsSectionComponent({preview=false, editMode = null, 
 
         const updateHeight = () => {
             const scaledHeight = innerRef.current.getBoundingClientRect().height;
-            setParentHeight(scaledHeight+25);
+            setParentHeight(scaledHeight + 25);
         };
 
         updateHeight();
@@ -95,66 +97,110 @@ export default function SkillsSectionComponent({preview=false, editMode = null, 
         const observer = new ResizeObserver(updateHeight);
         observer.observe(innerRef.current);
         return () => observer.disconnect();
-    }, [preview, scale, skills, editMode])
+    }, [preview, scale, skills, editMode]);
 
     return (
-        <div ref={parentRef} className={`w-full ${preview ? "overflow-hidden" : ""}`}
+        <div
+            ref={parentRef}
+            className={`w-full ${preview ? "overflow-hidden" : ""}`}
             style={preview && parentHeight ? { height: parentHeight } : {}}
         >
             <div
                 ref={innerRef}
-                style={preview ? {
-                    width: DIV_WIDTH,
-                    transform: `scale(${scale})`,
-                    transformOrigin: "top left",
-                } : {
-                    width: "100%",
-                }}
+                style={
+                    preview
+                        ? {
+                              width: DIV_WIDTH,
+                              transform: `scale(${scale})`,
+                              transformOrigin: "top left",
+                          }
+                        : {
+                              width: "100%",
+                          }
+                }
             >
-            {editMode !== null && editMode ?
-                <EditMode skills={skills}/>
-                :
-                <div className={`flex ${preview ? "flex-wrap flex-1" : ""} justify-between flex-wrap md:flex-nowrap`}>
-                    <DisplaySkills items={frontend} title="Front-End" preview={preview} builder={skillBuilder} total={projects.length}/>
-                    <DisplaySkills items={backend} title="Back-End" preview={preview} builder={skillBuilder} total={projects.length}/>
-                    <DisplaySkills items={languages} title="Languages" preview={preview} builder={skillBuilder} total={projects.length}/>
-                    <DisplaySkills items={tools} title="Tools & Others" preview={preview} builder={skillBuilder} total={projects.length}/>
-                </div>
-            }
+                {editMode !== null && editMode ? (
+                    <EditMode skills={skills} />
+                ) : (
+                    <div
+                        className={
+                            preview
+                                ? "grid grid-cols-4 gap-3 w-full"
+                                : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full p-2"
+                        }
+                    >
+                        <DisplaySkills
+                            items={frontend}
+                            title="Front-End"
+                            preview={preview}
+                            builder={skillBuilder}
+                            total={projects.length}
+                        />
+                        <DisplaySkills
+                            items={backend}
+                            title="Back-End"
+                            preview={preview}
+                            builder={skillBuilder}
+                            total={projects.length}
+                        />
+                        <DisplaySkills
+                            items={languages}
+                            title="Languages"
+                            preview={preview}
+                            builder={skillBuilder}
+                            total={projects.length}
+                        />
+                        <DisplaySkills
+                            items={tools}
+                            title="Tools & Others"
+                            preview={preview}
+                            builder={skillBuilder}
+                            total={projects.length}
+                        />
+                    </div>
+                )}
             </div>
         </div>
-  );
-}
-function DisplaySkills({items, title, preview, builder, total}) {
-    return(
-        <>
-            <div className={`m-2 p-4 border-1 border-slate-900 rounded ${preview ? "w-40" : "w-full"}`}>
-                <span className="text-teal-500 text-xs">{title}</span>
-                {items.length === 0
-                    ? <div>
-                        <span> No {title.toLowerCase()} skills set yet</span>
-                    </div>
-                    :
-                    <div className="flex flex-wrap gap-2">
-                        {items.map((slug)=> {
-                            const count = builder?.[slug] || 0
-                            const mastery = total > 0 ? Math.round((count / total) * 100) : 0
-                            return (
-                                <SkillItem
-                                    key={slug}
-                                    slug={slug}
-                                    mastery={mastery}
-                                    preview={preview}
-                                />
-                            );
-                        })}
-                    </div>
-                }
-            </div>
-        </>
     );
 }
-function SkillItem({slug, mastery, preview}) {
+
+function DisplaySkills({ items, title, preview, builder, total }) {
+    return (
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/40 border border-slate-800/80 backdrop-blur-xs flex flex-col gap-3.5 transition-all duration-300 hover:border-slate-700/80 h-full">
+            <div className="pb-2 border-b border-slate-800/60 flex items-center justify-between">
+                <span className="font-sub-header-text text-xs sm:text-sm uppercase tracking-wider font-semibold text-teal-400">
+                    {title}
+                </span>
+                <span className="text-[11px] font-body-text text-slate-400">
+                    {items.length} {items.length === 1 ? "skill" : "skills"}
+                </span>
+            </div>
+
+            {items.length === 0 ? (
+                <div className="py-4 text-xs font-body-text text-slate-400 italic">
+                    No {title.toLowerCase()} skills set yet
+                </div>
+            ) : (
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                    {items.map((slug) => {
+                        const count = builder?.[slug] || 0;
+                        const mastery = total > 0 ? Math.round((count / total) * 100) : 0;
+                        return (
+                            <SkillItem
+                                key={slug}
+                                slug={slug}
+                                mastery={mastery}
+                                preview={preview}
+                            />
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function SkillItem({ slug, mastery, preview }) {
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
@@ -168,25 +214,25 @@ function SkillItem({slug, mastery, preview}) {
     const Icon = DevIconsMapper(preview)[slug];
 
     return (
-        <div className="relative px-2 py-1 bg-transparent rounded-full flex items-center gap-2 border-2 border-slate-800 overflow-hidden">
+        <div className="group/item relative px-3 py-1.5 rounded-full flex items-center gap-2 border border-slate-700/60 bg-slate-900/70 overflow-hidden hover:border-teal-400/50 transition-colors">
             {!preview && (
                 <div
-                    className="absolute inset-y-0 left-0 bg-radial from-teal-600/70 via-teal-800/70 to-teal-950/70 rounded-full transition-[width] duration-700 ease-out"
-                    style={{width: `${progress}%`}}
-                />   
-            )
-            }
-            
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-teal-800/40 via-teal-700/40 to-teal-600/40 rounded-full transition-[width] duration-700 ease-out"
+                    style={{ width: `${progress}%` }}
+                />
+            )}
 
-            <div className="relative flex items-center gap-2">
-                {Icon && <Icon className="size-5" />}
+            <div className="relative flex items-center gap-2 z-1">
+                {Icon && (
+                    <Icon className="size-4 shrink-0 transition-transform duration-200 group-hover/item:scale-110" />
+                )}
 
-                <span className="m-1 font-header-text text-teal-200 text-[15px]">
-                    {slug}
+                <span className="font-sub-header-text text-slate-200 text-xs tracking-wide">
+                    {formatSkillName(slug)}
                 </span>
 
                 {!preview && mastery > 0 && (
-                    <span className="text-[10px] text-teal-400">
+                    <span className="text-[10px] font-mono font-semibold text-teal-300 ml-0.5">
                         {mastery}%
                     </span>
                 )}
@@ -194,58 +240,109 @@ function SkillItem({slug, mastery, preview}) {
         </div>
     );
 }
-function EditMode({skills}) {
-    const showToastMessage = useToastMessage()
-    const [languages, setLanguages] = useState([])
-    const [frontend, setFrontend] = useState([])
-    const [backend, setBackend] = useState([])
-    const [tools, setTools] = useState([])
-    const [isSaving, setIsSaving] = useState(false)
+
+function formatSkillName(slug) {
+    if (!slug) return "";
+    const customNames = {
+        csharp: "C#",
+        php: "PHP",
+        html: "HTML",
+        css: "CSS",
+        javascript: "JavaScript",
+        typescript: "TypeScript",
+        tailwindcss: "Tailwind CSS",
+        react: "React",
+        vue: "Vue",
+        angular: "Angular",
+        nextjs: "Next.js",
+        nuxtjs: "Nuxt",
+        svelte: "Svelte",
+        sveltekit: "SvelteKit",
+        astro: "Astro",
+        bootstrap: "Bootstrap",
+        threejs: "Three.js",
+        d3js: "D3.js",
+        vite: "Vite",
+        express: "Express",
+        nestjs: "NestJS",
+        laravel: "Laravel",
+        springboot: "Spring Boot",
+        django: "Django",
+        flask: "Flask",
+        fastapi: "FastAPI",
+        rubyonrails: "Rails",
+        aspnet: "ASP.NET",
+        nodejs: "Node.js",
+        deno: "Deno",
+        postgresql: "PostgreSQL",
+        mysql: "MySQL",
+        sqlite: "SQLite",
+        mongodb: "MongoDB",
+        redis: "Redis",
+        prisma: "Prisma",
+        docker: "Docker",
+        graphql: "GraphQL",
+        firebase: "Firebase",
+        postman: "Postman",
+    };
+    return customNames[slug.toLowerCase()] || slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
+function EditMode({ skills }) {
+    const showToastMessage = useToastMessage();
+    const [languages, setLanguages] = useState([]);
+    const [frontend, setFrontend] = useState([]);
+    const [backend, setBackend] = useState([]);
+    const [tools, setTools] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
     const [selected, setSelected] = useState({
         frontend: skills?.frontend || [],
         backend: skills?.backend || [],
         languages: skills?.languages || [],
         tools: skills?.tools || [],
-    })
-    useEffect(()=> {
+    });
+
+    useEffect(() => {
         async function fetchTech() {
             try {
                 const response = await api.get("/tech");
                 const data = response.data;
                 if (data && typeof data === "object" && !Array.isArray(data)) {
-                    setFrontend(Object.values(data.frontend || {}))
-                    setBackend(Object.values(data.backend || {}))
-                    setLanguages(Object.values(data.languages || {}))
-                    setTools(Object.values(data.tools || {}))
+                    setFrontend(Object.values(data.frontend || {}));
+                    setBackend(Object.values(data.backend || {}));
+                    setLanguages(Object.values(data.languages || {}));
+                    setTools(Object.values(data.tools || {}));
                 }
-            }
-            catch(error) {
+            } catch (error) {
                 console.error("Error fetching data: " + error.message);
             }
         }
-        fetchTech()
-    }, [])
-    const [prevSkills, setPrevSkills] = useState(skills)
+        fetchTech();
+    }, []);
+
+    const [prevSkills, setPrevSkills] = useState(skills);
     if (prevSkills !== skills) {
-        setPrevSkills(skills)
+        setPrevSkills(skills);
         setSelected({
             frontend: skills?.frontend || [],
             backend: skills?.backend || [],
-            languages: skills?.langauges || [],
+            languages: skills?.languages || [],
             tools: skills?.tools || [],
-        })
+        });
     }
+
     const toggleSkill = (category) => (slug, checked) => {
-        setSelected(prev => ({
+        setSelected((prev) => ({
             ...prev,
             [category]: checked
                 ? [...new Set([...prev[category], slug])]
-                : prev[category].filter(s => s !== slug),
+                : prev[category].filter((s) => s !== slug),
         }));
     };
-    const handleSubmit = async (e)=>{
-        e.preventDefault()
-        setIsSaving(true)
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
         try {
             const response = await api.put("/skills", {
                 skills: {
@@ -262,61 +359,81 @@ function EditMode({skills}) {
                 backend: data.data?.backend || [],
                 languages: data.data?.languages || [],
                 tools: data.data?.tools || [],
-            })
+            });
+        } catch (error) {
+            showToastMessage(false, error.message);
+        } finally {
+            setIsSaving(false);
         }
-        catch(error) {
-            showToastMessage(false, error.message)
-        }
-        finally {
-            setIsSaving(false)
-        }
-    }
-    return(
-        <>
-            <div>
-                <div className="m-2 admin-header [&>div]:m-2">
-                    <SkillCheckBoxes items={frontend} title="Front-End" selected={selected.frontend} onToggle={toggleSkill("frontend")}/>
-                    <SkillCheckBoxes items={backend} title="Back-End" selected={selected.backend} onToggle={toggleSkill("backend")}/>
-                    <SkillCheckBoxes items={languages} title="Languages" selected={selected.languages} onToggle={toggleSkill("languages")}/>
-                    <SkillCheckBoxes items={tools} title="Tools&Others" selected={selected.tools} onToggle={toggleSkill("tools")}/>
-                </div>
-                <div className="m-2 flex justify-end">
-                    <button type="submit" className="px-2 py-1 border-1 border-slate-900 text-[11px] rounded 
-                    cursor-pointer hover:bg-slate-800 hover:text-teal-200"
-                        onClick={handleSubmit}
-                        disabled={isSaving}
-                    >
-                        {isSaving ? <SpinnerComponent width="4" height="4" /> : "Save"}
-                    </button>
-                </div>                
+    };
+
+    return (
+        <div>
+            <div className="m-2 admin-header [&>div]:m-2">
+                <SkillCheckBoxes
+                    items={frontend}
+                    title="Front-End"
+                    selected={selected.frontend}
+                    onToggle={toggleSkill("frontend")}
+                />
+                <SkillCheckBoxes
+                    items={backend}
+                    title="Back-End"
+                    selected={selected.backend}
+                    onToggle={toggleSkill("backend")}
+                />
+                <SkillCheckBoxes
+                    items={languages}
+                    title="Languages"
+                    selected={selected.languages}
+                    onToggle={toggleSkill("languages")}
+                />
+                <SkillCheckBoxes
+                    items={tools}
+                    title="Tools & Others"
+                    selected={selected.tools}
+                    onToggle={toggleSkill("tools")}
+                />
             </div>
-        </>
+            <div className="m-2 flex justify-end">
+                <button
+                    type="submit"
+                    className="px-3 py-1.5 border border-slate-700 bg-teal-950/60 text-teal-200 text-xs rounded-lg cursor-pointer hover:bg-teal-900 transition-colors font-sub-header-text uppercase tracking-wider"
+                    onClick={handleSubmit}
+                    disabled={isSaving}
+                >
+                    {isSaving ? <SpinnerComponent width="4" height="4" /> : "Save"}
+                </button>
+            </div>
+        </div>
     );
 }
-function SkillCheckBoxes({items, title, selected, onToggle}) {
-    return(
-        <>
-            <div className="flex w-full flex-col">
-                <h1>{title}</h1>
-                <div className="scrollable admin-container h-64 w-full overflow-x-auto">
-                {items.map((item)=> (
+
+function SkillCheckBoxes({ items, title, selected, onToggle }) {
+    return (
+        <div className="flex w-full flex-col">
+            <h1 className="font-sub-header-text text-xs uppercase tracking-wider text-teal-400 mb-1">
+                {title}
+            </h1>
+            <div className="scrollable admin-container h-64 w-full overflow-x-auto">
+                {items.map((item) => (
                     <div key={item.slug} className="flex checkbox-hover gap-1 items-center">
-                        <Checkbox checked={selected.includes(item.slug)} id={`cb-${item.slug}`} className="size-3.5"
+                        <Checkbox
+                            checked={selected.includes(item.slug)}
+                            id={`cb-${item.slug}`}
+                            className="size-3.5"
                             onCheckedChange={(checked) => onToggle(item.slug, !!checked)}
                         />
-                        <Label htmlFor={`cb-${item.slug}`} className="flex items-center text-[11px]">
-                            {(()=> {
+                        <Label htmlFor={`cb-${item.slug}`} className="flex items-center text-[11px] gap-1 cursor-pointer">
+                            {(() => {
                                 const Icon = DevIconsMapper(true)[item.slug];
-                                return Icon ? <Icon className="size-3.5"/> : null;
-                            })()
-                            }
+                                return Icon ? <Icon className="size-3.5" /> : null;
+                            })()}
                             <span className="truncate">{item.name}</span>
                         </Label>
                     </div>
-                ))
-                }
-                </div>
+                ))}
             </div>
-        </>
+        </div>
     );
 }

@@ -7,10 +7,10 @@ export default function AdminNavLink({ to, end, children }) {
         to={to}
         end={end}
         className={({ isActive }) =>
-          `block px-4 py-2 rounded transition-colors ${
+          `block px-3.5 py-2.5 rounded-xl font-sub-header-text text-xs uppercase tracking-wider transition-all duration-200 ${
             isActive
-              ? "bg-sky-500/20 text-sky-300 border-l-2 border-sky-400"
-              : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
+              ? "bg-teal-950/70 text-teal-300 border border-teal-500/40 shadow-sm shadow-teal-950/50 font-semibold"
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent"
           }`
         }
       >
