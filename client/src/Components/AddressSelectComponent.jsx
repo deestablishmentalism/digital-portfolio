@@ -8,11 +8,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {useState} from "react"
-export default function AddressSelectComponent({data, value,onValueChange, title}) {
+export default function AddressSelectComponent({data, value, onValueChange, title, className = "w-full"}) {
     return(
         <>
             <Select onValueChange={onValueChange} value={value}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className={className}>
                     <SelectValue placeholder={`Select ${title}`}/>
                 </SelectTrigger>
                 <SelectContent>

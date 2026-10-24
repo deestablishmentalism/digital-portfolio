@@ -35,7 +35,7 @@ export function DevIconsMapper(preview=false)  {
         yaml: preview ? SiIcons.SiYaml : DevIcons.Yaml,
         json: preview ? SiIcons.SiJson : DevIcons.Json,
         react: preview ? FaIcons.FaReact : DevIcons._React,
-        vue: preview ? FaIcons.FaVuejs : DevIcons.Vue,
+        vue: preview ? FaIcons.FaVuejs : DevIcons._Vue,
         angular: preview ? FaIcons.FaAngular : DevIcons.Angular,
         nextjs: preview ? SiIcons.SiNextdotjs : DevIcons.Nextjs,
         nuxt: preview ? SiIcons.SiNuxt : DevIcons.Nuxt,
