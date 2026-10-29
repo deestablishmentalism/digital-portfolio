@@ -1,7 +1,7 @@
 import {Outlet} from 'react-router-dom'
 import Footer from '../Components/Footer';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Download } from 'lucide-react';
 import SpinnerComponent from '../Components/SpinnerComponent';
 import logo from "../assets/logo-animation-12fps.webm";
 
@@ -68,6 +68,14 @@ export default function HomeLayout() {
                             </div>                        
                             <nav className="hidden md:block">
                                 <ul className="flex space-x-6 [&>li]:p-2 [&>li]:font-header-text">
+                                    <li>
+                                        <a href="https://drive.google.com/file/d/1zKHxKrvwzT8ZuWOzo1IJ1jMqkzp0jNkx/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+                                            <button className="cursor-pointer hover:text-blue-500 bracket-hover flex items-center">
+                                                <Download className="mr-2" />
+                                                Resume
+                                            </button>
+                                        </a>
+                                    </li>
                                     <li><button className="cursor-pointer hover:text-blue-500 bracket-hover"
                                         onClick={()=>scrollToSection("about")}
                                     >About</button></li>
