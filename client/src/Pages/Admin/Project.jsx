@@ -1,15 +1,50 @@
 import { useState, useCallback } from "react";
-import { FolderGit2, Plus, Layers, RefreshCw } from "lucide-react";
+import { FolderGit2, Plus, Layers, RefreshCw, AlertTriangle } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import AddProjectModal from "../../Components/AddProjectModal";
 import ProjectsSectionComponent from "../../Components/ProjectsSectionComponent";
+import SpinnerComponent from "../../Components/SpinnerComponent";
+import { useToastMessage } from "../../Components/ToastMessage";
+import api from "../../api/axios";
 
 export default function Project() {
+    const showToastMessage = useToastMessage();
     const [isOpenModal, setIsOpenModal] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
+    const [deletingProject, setDeletingProject] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
     const handleRefresh = useCallback(() => {
         setRefreshKey((prev) => prev + 1);
     }, []);
+
+    const handleConfirmDelete = async () => {
+        if (!deletingProject?._id) return;
+        setIsDeleting(true);
+        try {
+            const response = await api.delete(`/projects/${deletingProject._id}`);
+            showToastMessage(
+                Boolean(response.data?.success),
+                response.data?.message || "Project deleted successfully!"
+            );
+            setDeletingProject(null);
+            handleRefresh();
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || "Failed to delete project";
+            showToastMessage(false, msg);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto w-full pb-8">
@@ -49,7 +84,7 @@ export default function Project() {
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Add Modal */}
             {isOpenModal && (
                 <AddProjectModal
                     open={isOpenModal}
@@ -59,6 +94,67 @@ export default function Project() {
                     }}
                 />
             )}
+
+            {/* Edit Modal */}
+            {editingProject && (
+                <AddProjectModal
+                    key={editingProject._id}
+                    open={Boolean(editingProject)}
+                    project={editingProject}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setEditingProject(null);
+                            handleRefresh();
+                        }
+                    }}
+                />
+            )}
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={Boolean(deletingProject)}
+                onOpenChange={(open) => {
+                    if (!open && !isDeleting) setDeletingProject(null);
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <div className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="w-5 h-5 shrink-0" />
+                            <DialogTitle>Delete Project</DialogTitle>
+                        </div>
+                        <DialogDescription className="pt-1">
+                            Are you sure you want to delete{" "}
+                            <span className="font-semibold text-foreground">
+                                {deletingProject?.project_name}
+                            </span>
+                            ? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isDeleting}
+                            onClick={() => setDeletingProject(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={isDeleting}
+                            onClick={handleConfirmDelete}
+                        >
+                            {isDeleting ? (
+                                <SpinnerComponent width={16} height={16} />
+                            ) : (
+                                "Delete Project"
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Content Container */}
             <div className="p-5 sm:p-6 rounded-2xl bg-slate-950/40 border border-slate-800/80 backdrop-blur-xs">
@@ -74,7 +170,12 @@ export default function Project() {
                     </span>
                 </div>
 
-                <ProjectsSectionComponent key={refreshKey} preview={true} />
+                <ProjectsSectionComponent
+                    key={refreshKey}
+                    preview={true}
+                    onEdit={setEditingProject}
+                    onDelete={setDeletingProject}
+                />
             </div>
         </div>
     );

@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import api from "../api/axios";
 import SpinnerComponent from "./SpinnerComponent";
 import LazyImageLoader from "../utils/LazyImageLoader";
-import { X, ArrowBigLeft, ArrowBigRight, Calendar, Eye, ExternalLink } from "lucide-react";
+import { X, ArrowBigLeft, ArrowBigRight, Calendar, Eye, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { DevIconsMapper } from "../utils/IconMapper";
 
-export default function ProjectsSectionComponent({ preview = false, onLoad }) {
+export default function ProjectsSectionComponent({ preview = false, onLoad, onEdit, onDelete }) {
     const [fetching, setFetching] = useState(true);
     const [projects, setProjects] = useState([]);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -27,17 +27,6 @@ export default function ProjectsSectionComponent({ preview = false, onLoad }) {
         }
         fetchProjects();
     }, [preview, onLoad]);
-
-    const handleProjectClick = (project) => {
-        if (preview) return;
-        if (project.preview?.type === "gallery") {
-            setGallery(project.preview.images || []);
-            setCurrentIndex(0);
-            setIsGalleryOpen(true);
-        } else if (project.preview?.type === "url" && project.url) {
-            window.open(project.url, "_blank", "noopener,noreferrer");
-        }
-    };
 
     const handlePrev = useCallback(() => {
         setCurrentIndex((i) => (i === 0 ? gallery.length - 1 : i - 1));
@@ -74,6 +63,7 @@ export default function ProjectsSectionComponent({ preview = false, onLoad }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full p-2">
                     {projects.map((project) => {
                         const isOpen = overlayOpen.has(project._id);
+                        const liveUrl = project.preview?.type === "url" ? (project.preview?.url || project.url) : null;
 
                         const toggleOverlay = (e) => {
                             if (preview) return;
@@ -98,21 +88,45 @@ export default function ProjectsSectionComponent({ preview = false, onLoad }) {
                             >
                                 {/* Project Image Banner */}
                                 <div className="relative w-full aspect-video overflow-hidden bg-slate-900 border-b border-slate-800/60">
-                                    {project.preview?.images?.[0]?.secure_url ? (
-                                        <LazyImageLoader
-                                            src={project.preview.images[0].secure_url}
-                                            alt={project.project_name}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
+                                    {liveUrl && !preview ? (
+                                        <a
+                                            href={liveUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block w-full h-full"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={`Visit ${project.project_name}`}
+                                        >
+                                            {project.preview?.images?.[0]?.secure_url ? (
+                                                <LazyImageLoader
+                                                    src={project.preview.images[0].secure_url}
+                                                    alt={project.project_name}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-slate-500 font-sub-header-text text-xs">
+                                                    <ExternalLink className="w-5 h-5 text-teal-400/70" />
+                                                    <span>Visit Live Site</span>
+                                                </div>
+                                            )}
+                                        </a>
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-600 font-sub-header-text text-xs">
-                                            No Preview
-                                        </div>
+                                        project.preview?.images?.[0]?.secure_url ? (
+                                            <LazyImageLoader
+                                                src={project.preview.images[0].secure_url}
+                                                alt={project.project_name}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-600 font-sub-header-text text-xs">
+                                                No Preview
+                                            </div>
+                                        )
                                     )}
 
                                     {/* Project Type Badge */}
                                     {project.project_type && (
-                                        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full border border-teal-500/30 bg-slate-950/80 backdrop-blur-md text-teal-300 text-xs font-sub-header-text uppercase tracking-wider">
+                                        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full border border-teal-500/30 bg-slate-950/80 backdrop-blur-md text-teal-300 text-xs font-sub-header-text uppercase tracking-wider pointer-events-none">
                                             {project.project_type}
                                         </div>
                                     )}
@@ -125,7 +139,20 @@ export default function ProjectsSectionComponent({ preview = false, onLoad }) {
                                             className="font-sub-header-text text-base sm:text-lg font-bold text-slate-100 tracking-wide truncate"
                                             title={project.project_name}
                                         >
-                                            {project.project_name}
+                                            {liveUrl && !preview ? (
+                                                <a
+                                                    href={liveUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="hover:text-teal-300 transition-colors inline-flex items-center gap-1.5 max-w-full"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <span className="truncate">{project.project_name}</span>
+                                                    <ExternalLink className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                                </a>
+                                            ) : (
+                                                project.project_name
+                                            )}
                                         </h3>
                                         <p className="mt-1 text-xs font-body-text text-slate-400 flex items-center gap-1.5">
                                             <Calendar className="w-3.5 h-3.5 text-teal-400 shrink-0" />
@@ -149,6 +176,36 @@ export default function ProjectsSectionComponent({ preview = false, onLoad }) {
                                             );
                                         })}
                                     </div>
+
+                                    {/* Admin Edit & Delete Controls */}
+                                    {preview && (
+                                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/60">
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEdit?.(project);
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-950/60 hover:bg-teal-900 border border-teal-500/40 text-teal-200 font-sub-header-text text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer"
+                                                title="Edit project"
+                                            >
+                                                <Pencil className="w-3.5 h-3.5" />
+                                                <span>Edit</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDelete?.(project);
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 border border-red-500/40 text-red-200 font-sub-header-text text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer"
+                                                title="Delete project"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                                <span>Delete</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Hover / Click Overlay */}
@@ -161,29 +218,49 @@ export default function ProjectsSectionComponent({ preview = false, onLoad }) {
                                         }`}
                                     >
                                         <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/80">
-                                            <span className="font-sub-header-text text-xs uppercase tracking-wider text-teal-400 font-semibold truncate pr-2">
-                                                {project.project_name}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                className="shrink-0 px-3 py-1 cursor-pointer bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-400/40 rounded-full font-sub-header-text text-xs uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleProjectClick(project);
-                                                }}
-                                            >
-                                                {project.preview?.type === "gallery" ? (
-                                                    <>
-                                                        <Eye className="w-3.5 h-3.5" />
-                                                        <span>Gallery</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <ExternalLink className="w-3.5 h-3.5" />
-                                                        <span>Open</span>
-                                                    </>
-                                                )}
-                                            </button>
+                                            {liveUrl ? (
+                                                <a
+                                                    href={liveUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="font-sub-header-text text-xs uppercase tracking-wider text-teal-400 font-semibold truncate pr-2 hover:underline inline-flex items-center gap-1"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <span className="truncate">{project.project_name}</span>
+                                                    <ExternalLink className="w-3 h-3 shrink-0" />
+                                                </a>
+                                            ) : (
+                                                <span className="font-sub-header-text text-xs uppercase tracking-wider text-teal-400 font-semibold truncate pr-2">
+                                                    {project.project_name}
+                                                </span>
+                                            )}
+
+                                            {project.preview?.type === "gallery" ? (
+                                                <button
+                                                    type="button"
+                                                    className="shrink-0 px-3 py-1 cursor-pointer bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-400/40 rounded-full font-sub-header-text text-xs uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setGallery(project.preview.images || []);
+                                                        setCurrentIndex(0);
+                                                        setIsGalleryOpen(true);
+                                                    }}
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    <span>Gallery</span>
+                                                </button>
+                                            ) : liveUrl ? (
+                                                <a
+                                                    href={liveUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="shrink-0 px-3 py-1 cursor-pointer bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-400/40 rounded-full font-sub-header-text text-xs uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    <span>Open</span>
+                                                </a>
+                                            ) : null}
                                         </div>
 
                                         <div className="flex flex-wrap gap-1.5 py-2">
