@@ -2,9 +2,10 @@ import mongoose from "mongoose";
 import { WorkExperience } from "../models/workExperience.js";
 
 function buildPayload(body) {
-    const { work_title, description, start_date, end_date } = body;
+    const { work_title, company, description, start_date, end_date } = body;
     return {
         work_title: typeof work_title === "string" ? work_title.trim() : work_title,
+        company: typeof company === "string" ? company.trim() : company,
         description: typeof description === "string" ? description.trim() : "",
         start_date: start_date || undefined,
         end_date: end_date || null,

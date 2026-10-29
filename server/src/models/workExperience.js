@@ -6,6 +6,11 @@ const workExperienceSchema = new mongoose.Schema({
             required: true,
             trim: true
         },
+        company: {
+            type: String,
+            required: true,
+            trim: true
+        },
         description: {
             type: String,
             required: false,

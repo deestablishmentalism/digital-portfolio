@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, MapPin, Briefcase, CalendarDays } from "lucide-react";
+import { User, MapPin, Briefcase, CalendarDays, Building2 } from "lucide-react";
 import api from "../api/axios";
 import SpinnerComponent from "./SpinnerComponent";
 
@@ -188,9 +188,20 @@ export default function AboutSectionComponent({ preview = false, onLoad }) {
                                             <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col gap-2 transition-all duration-200 hover:border-slate-700/80">
                                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1.5 sm:gap-2">
                                                     <div className="min-w-0">
-                                                        <h4 className="text-sm sm:text-base font-bold font-sub-header-text text-slate-100 tracking-wide break-words">
-                                                            {experience.work_title}
-                                                        </h4>
+                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                            <h4 className="text-sm sm:text-base font-bold font-sub-header-text text-slate-100 tracking-wide break-words">
+                                                                {experience.work_title}
+                                                            </h4>
+                                                            {experience.company && (
+                                                                <>
+                                                                    <span className="text-slate-600 hidden sm:inline">•</span>
+                                                                    <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-sub-header-text text-teal-300 font-medium">
+                                                                        <Building2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                                                        <span>{experience.company}</span>
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs font-body-text text-slate-400">
                                                             <CalendarDays className="w-3.5 h-3.5 text-teal-400 shrink-0" />
                                                             <span>

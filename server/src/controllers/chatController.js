@@ -3,15 +3,17 @@ import { PersonalInfo } from "../models/personalInfo.js";
 import { Project } from "../models/project.js";
 import { Skill } from "../models/skill.js";
 import { Link } from "../models/link.js";
+import {WorkExperience} from "../models/workExperience.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function getPortfolioContext() {
-  const [personalInfo, projects, skillDoc, links] = await Promise.all([
+  const [personalInfo, projects, skillDoc, links, work_experiences] = await Promise.all([
     PersonalInfo.findOne({}).lean(),
     Project.find({}).lean(),
     Skill.findOne({}).lean(),
     Link.find({}).lean(),
+    WorkExperience.find({}).lean(),
   ]);
 
   const sections = [];
@@ -44,7 +46,17 @@ async function getPortfolioContext() {
     if (s.tools?.length) info += `  Tools & Others: ${s.tools.join(", ")}\n`;
     sections.push(info);
   }
-
+  if (work_experiences?.length) {
+    let info = `WORK EXPERIENCE (${work_experiences.length} total)\n`;
+    for (const w of work_experiences) {
+      info += `  - ${w.work_title || w.position || "Role"} at ${w.company}\n`;
+      info += `    Description: ${w.description}\n`;
+      const start = w.start_date ? new Date(w.start_date).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+      const end = w.end_date ? new Date(w.end_date).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Present";
+      if (start || end) info += `    Period: ${start}${end ? ` – ${end}` : ""}\n`;
+    }
+    sections.push(info);
+  }
   // --- Projects ---
   if (projects?.length) {
     let info = `PROJECTS (${projects.length} total)\n`;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, MapPin, Pencil, X, Plus, Trash, Check, Camera, Sparkles, Briefcase, CalendarDays, FileText, ExternalLink } from "lucide-react";
+import { User, MapPin, Pencil, X, Plus, Trash, Check, Camera, Sparkles, Briefcase, CalendarDays, FileText, ExternalLink, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -1091,9 +1091,20 @@ function WorkExperienceCard({
         <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col gap-2">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <h3 className="text-base font-bold font-sub-header-text text-slate-100 tracking-wide break-words">
-                        {experience.work_title}
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <h3 className="text-base font-bold font-sub-header-text text-slate-100 tracking-wide break-words">
+                            {experience.work_title}
+                        </h3>
+                        {experience.company && (
+                            <>
+                                <span className="text-slate-600 hidden sm:inline">•</span>
+                                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-sub-header-text text-teal-300 font-medium">
+                                    <Building2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                    <span>{experience.company}</span>
+                                </span>
+                            </>
+                        )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs font-body-text text-slate-400">
                         <CalendarDays className="w-3.5 h-3.5 text-teal-400" />
                         <span>
@@ -1172,6 +1183,7 @@ function WorkExperienceForm({ experience, onSaved, onCancel }) {
     const [isCurrent, setIsCurrent] = useState(isNew ? false : !experience.end_date);
     const [payload, setPayload] = useState({
         work_title: experience?.work_title || "",
+        company: experience?.company || "",
         description: experience?.description || "",
         start_date: toDateInputValue(experience?.start_date),
         end_date: toDateInputValue(experience?.end_date),
@@ -1181,13 +1193,14 @@ function WorkExperienceForm({ experience, onSaved, onCancel }) {
         e.preventDefault();
         const body = {
             work_title: payload.work_title.trim(),
+            company: payload.company.trim(),
             description: payload.description.trim(),
             start_date: payload.start_date,
             end_date: isCurrent ? null : payload.end_date,
         };
 
-        if (!body.work_title || !body.start_date) {
-            showToastMessage(false, "Work title and start date are required.");
+        if (!body.work_title || !body.company || !body.start_date) {
+            showToastMessage(false, "Work title, company, and start date are required.");
             return;
         }
         if (!isCurrent && !body.end_date) {
@@ -1227,18 +1240,33 @@ function WorkExperienceForm({ experience, onSaved, onCancel }) {
                 </h3>
             </div>
 
-            <div>
-                <Label htmlFor={inputId("title")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
-                    Work Title
-                </Label>
-                <Input
-                    id={inputId("title")}
-                    placeholder="e.g. Full Stack Developer"
-                    value={payload.work_title}
-                    onChange={(e) => setPayload({ ...payload, work_title: e.target.value })}
-                    required
-                    className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <Label htmlFor={inputId("title")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                        Work Title
+                    </Label>
+                    <Input
+                        id={inputId("title")}
+                        placeholder="e.g. Full Stack Developer"
+                        value={payload.work_title}
+                        onChange={(e) => setPayload({ ...payload, work_title: e.target.value })}
+                        required
+                        className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl"
+                    />
+                </div>
+                <div>
+                    <Label htmlFor={inputId("company")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                        Company
+                    </Label>
+                    <Input
+                        id={inputId("company")}
+                        placeholder="e.g. Acme Corp"
+                        value={payload.company}
+                        onChange={(e) => setPayload({ ...payload, company: e.target.value })}
+                        required
+                        className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl"
+                    />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
