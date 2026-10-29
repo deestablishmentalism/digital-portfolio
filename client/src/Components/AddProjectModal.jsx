@@ -21,32 +21,59 @@ import {
   DialogContent,
   DialogHeader,
 } from "@/components/ui/dialog"
-import { X, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react"
 import SpinnerComponent from "./SpinnerComponent"
 import api from "../api/axios"
 import { useToastMessage } from "./ToastMessage"
 import { DevIconsMapper} from "../utils/IconMapper"
-export default function AddProjectModal({ open, onOpenChange }) {
+// Converts stored dates (Date ISO strings or "YYYY-MM-DD") to a date input value
+const toDateInputValue = (value) => {
+  if (!value || value === "Present") return ""
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10)
+  const date = new Date(value)
+  return isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10)
+}
+
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+
+// Pass `project` to open the modal in edit mode with its data pre-filled
+export default function AddProjectModal({ open, onOpenChange, project = null, onSaved }) {
+  const isEdit = Boolean(project?._id)
+  const initialType = project?.preview?.type || ""
+  const initialImages = project?.preview?.images || []
   const showToastMessage = useToastMessage()
   const [isAdding, setIsAdding] = useState(false)
-  const [uploadType, setUploadType] = useState("")
-  const [projectType, setProjectType] = useState("")
+  const [uploadType, setUploadType] = useState(initialType)
+  const [projectType, setProjectType] = useState(project?.project_type || "")
   const uploadTypeLabels = { gallery: "Gallery", url: "Active URL" }
   const projectTypeLabels = {client: "Client", personal: "Personal"}
-  const [isProjectFinished, setIsProjectFinished] = useState(false);
+  const initialEndDate = toDateInputValue(project?.project_end_date)
+  const [isProjectFinished, setIsProjectFinished] = useState(Boolean(initialEndDate));
   const [form, setForm] = useState({
-    project_name: "",
-    project_description: "",
-    project_start_date: "",
-    project_end_date: "",
+    project_name: project?.project_name || "",
+    project_description: project?.project_description || "",
+    project_start_date: toDateInputValue(project?.project_start_date),
+    project_end_date: initialEndDate,
     languages: [],
     project_type: "",
-    url: "",
+    url: project?.preview?.url || "",
   })
   const [files, setFiles] = useState([])
   const [previews, setPreviews] = useState([])
-  const [languages, setLanguages] = useState([])
+  // Already-uploaded images (edit mode) kept separately from newly selected files
+  const [existingImages, setExistingImages] = useState(initialType === "gallery" ? initialImages : [])
+  const [existingThumbnail, setExistingThumbnail] = useState(initialType === "url" ? initialImages[0] || null : null)
+  const [thumbnailFile, setThumbnailFile] = useState(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState("")
+  const [languages, setLanguages] = useState(project?.languages || [])
   const fileInputRef = useRef(null)
+  const thumbnailInputRef = useRef(null)
   const [languagesItems, setLanguagesItems] = useState([])
   const [frontendItems, setFrontendItems] = useState([])
   const [backendItems, setBackendItems] = useState([])
@@ -63,7 +90,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
       }
     }
     fetchTech();
-  },[]);
+  }, [showToastMessage]);
   function handleChecked(slug, isChecked) {
       setLanguages(prev =>
         isChecked
@@ -75,14 +102,34 @@ export default function AddProjectModal({ open, onOpenChange }) {
     setForm({ ...form, [field]: e.target.value })
   }
   const handleFileSelect = (e) => {
-    const selected = Array.from(e.target.files)
-    setFiles(selected)
-    setPreviews(selected.map((f) => URL.createObjectURL(f)))
+    const selected = Array.from(e.target.files || [])
+    e.target.value = ""
+    if (selected.length === 0) return
+    setFiles((prev) => [...prev, ...selected])
+    setPreviews((prev) => [...prev, ...selected.map((f) => URL.createObjectURL(f))])
   }
   const removeFile = (index) => {
     URL.revokeObjectURL(previews[index])
     setFiles((prev) => prev.filter((_, i) => i !== index))
     setPreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+  const removeExistingImage = (publicId) => {
+    setExistingImages((prev) => prev.filter((img) => img.public_id !== publicId))
+  }
+  const handleThumbnailSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ""
+    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+    setThumbnailFile(file)
+    setThumbnailPreview(URL.createObjectURL(file))
+  }
+  const removeThumbnail = () => {
+    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+    setThumbnailFile(null)
+    setThumbnailPreview("")
+    setExistingThumbnail(null)
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = ""
   }
   const resetForm = () => {
     setForm({
@@ -94,46 +141,100 @@ export default function AddProjectModal({ open, onOpenChange }) {
       url: "",
     })
     setUploadType("")
+    setProjectType("")
+    setIsProjectFinished(false)
+    setLanguages([])
     setFiles([])
     previews.forEach((p) => URL.revokeObjectURL(p))
     setPreviews([])
+    setExistingImages([])
+    setExistingThumbnail(null)
+    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+    setThumbnailFile(null)
+    setThumbnailPreview("")
+    if (fileInputRef.current) fileInputRef.current.value = ""
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = ""
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!form.project_name.trim()) {
+      showToastMessage(false, "Project name is required.")
+      return
+    }
+    if (!form.project_description.trim()) {
+      showToastMessage(false, "Project description is required.")
+      return
+    }
+    if (!form.project_start_date) {
+      showToastMessage(false, "Project start date is required.")
+      return
+    }
+    if (isProjectFinished && form.project_end_date && form.project_end_date < form.project_start_date) {
+      showToastMessage(false, "End date cannot be earlier than the start date.")
+      return
+    }
+    if (!projectType) {
+      showToastMessage(false, "Please select a project type.")
+      return
+    }
+    if (!uploadType) {
+      showToastMessage(false, "Please select an upload type.")
+      return
+    }
+    if (uploadType === "url" && !form.url.trim()) {
+      showToastMessage(false, "Project URL is required.")
+      return
+    }
+    if (uploadType === "gallery" && existingImages.length + files.length === 0) {
+      showToastMessage(false, "Please select at least one image for the gallery.")
+      return
+    }
+
     setIsAdding(true)
     try {
       const body = {
-        project_name: form.project_name,
-        project_description: form.project_description,
+        project_name: form.project_name.trim(),
+        project_description: form.project_description.trim(),
         project_start_date: form.project_start_date,
-        project_end_date: form.project_end_date === "" ? "Present" : form.project_end_date,
+        project_end_date: !isProjectFinished || !form.project_end_date ? "Present" : form.project_end_date,
         project_type: projectType,
         languages: languages,
         preview: {},
       }
 
+      // Existing images are sent back as objects (kept); new files as base64 (uploaded)
       if (uploadType === "url") {
-        body.preview = { type: "url", url: form.url }
+        const images = thumbnailFile
+          ? [await toBase64(thumbnailFile)]
+          : existingThumbnail
+            ? [existingThumbnail]
+            : []
+        body.preview = { type: "url", url: form.url.trim(), images }
       } else if (uploadType === "gallery") {
-        const toBase64 = (file) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result)
-            reader.onerror = reject
-            reader.readAsDataURL(file)
-          })
-        const images = await Promise.all(files.map(toBase64))
-        body.preview = { type: "gallery", images }
+        const newImages = await Promise.all(files.map(toBase64))
+        body.preview = { type: "gallery", images: [...existingImages, ...newImages] }
       }
 
-      const response = await api.post("/projects", body)
-      if (!response.created) throw new Error("Adding project failed");
-      else window.location.reload
-      resetForm()
-      onOpenChange(false)
+      const response = isEdit
+        ? await api.put(`/projects/${project._id}`, body)
+        : await api.post("/projects", body)
+      if (response.data?.success) {
+        showToastMessage(
+          true,
+          response.data?.message || (isEdit ? "Project updated successfully!" : "Project created successfully!")
+        )
+        onSaved?.(response.data.data)
+        resetForm()
+        onOpenChange(false)
+      } else {
+        throw new Error(response.data?.message || (isEdit ? "Updating project failed" : "Adding project failed"))
+      }
     } catch (error) {
-      console.error("Failed to add project:", error.message)
+      const msg = error.response?.data?.message || error.message || "Failed to save project"
+      showToastMessage(false, msg)
+      console.error("Failed to save project:", error)
     } finally {
       setIsAdding(false)
     }
@@ -143,7 +244,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v) }} disablePointerDismissal>
       <DialogContent className="sm:max-w-4xl h-[80vh] flex flex-col flex-1 overflow-y-auto pr-2 scrollbar-fade">
         <DialogHeader className="relative">
-          <DialogTitle>Add Project</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Project" : "Add Project"}</DialogTitle>
           <DialogDescription className="font-black text-center text-2xl">Project Details</DialogDescription>
           <DialogClose />
         </DialogHeader>
@@ -168,12 +269,12 @@ export default function AddProjectModal({ open, onOpenChange }) {
             </div>
             <div className="flex-1">
               <div className="flex">
-                <Switch id="has-end-date" className="m-1" onCheckedChange={(checked)=> setIsProjectFinished(checked)}/> 
+                <Switch id="has-end-date" className="m-1" checked={isProjectFinished} onCheckedChange={(checked)=> setIsProjectFinished(checked)}/> 
                 <Label htmlFor="has-end-date" className="m-1">Finished Project</Label>
               </div>
                 <div>
                   {isProjectFinished &&
-                    <Input id="start-date" type="date" value={form.project_end_date} onChange={handleFormChange("project_end_date")} />
+                    <Input id="end-date" type="date" value={form.project_end_date} onChange={handleFormChange("project_end_date")} />
                   }
                 </div>
             </div>
@@ -199,7 +300,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
           <div className="flex w-full">
             <div className="m-2">
               <Label className="m-2">Upload Type</Label>
-              <Select placeholder="Select upload type" onValueChange={setUploadType} className="w-100">
+              <Select placeholder="Select upload type" value={uploadType || null} onValueChange={(v) => setUploadType(v ?? "")} className="w-100">
                 <SelectTrigger className="m-2 w-full max-w-48">
                   <SelectValue>{(v) => v ? uploadTypeLabels[v] : "Select upload type"}</SelectValue>
                 </SelectTrigger>
@@ -214,7 +315,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
             </div>  
             <div className="m-2">
               <Label className="m-2">Project Type</Label>
-              <Select placeholder="Select project type" className="w-100" onValueChange={setProjectType}>
+              <Select placeholder="Select project type" className="w-100" value={projectType || null} onValueChange={(v) => setProjectType(v ?? "")}>
                 <SelectTrigger className="m-2 w-full max-w-48">
                   <SelectValue>{(v) => v ? projectTypeLabels[v] : "Select project type"}</SelectValue>
                 </SelectTrigger>
@@ -230,9 +331,68 @@ export default function AddProjectModal({ open, onOpenChange }) {
           </div>
 
           {uploadType === "url" && (
-            <div>
-              <Label htmlFor="project-url">Project URL</Label>
-              <Input id="project-url" placeholder="https://example.com" value={form.url} onChange={handleFormChange("url")} />
+            <div className="flex flex-col gap-3">
+              <div>
+                <Label htmlFor="project-url">Project URL</Label>
+                <Input
+                  id="project-url"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={form.url}
+                  onChange={handleFormChange("url")}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="project-thumbnail">Thumbnail (Optional)</Label>
+                <div className="flex items-center gap-3 mt-1.5">
+                  {thumbnailPreview || existingThumbnail?.secure_url ? (
+                    <div className="relative w-28 h-20 rounded-md overflow-hidden border border-slate-300 group bg-slate-100 shadow-sm">
+                      <img
+                        src={thumbnailPreview || existingThumbnail.secure_url}
+                        alt="Thumbnail preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeThumbnail}
+                        className="absolute top-1 right-1 bg-black/70 hover:bg-red-600 text-white rounded-full p-1 transition-colors cursor-pointer shadow"
+                        title="Remove thumbnail"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => thumbnailInputRef.current?.click()}
+                      className="w-28 h-20 rounded-md border-2 border-dashed border-gray-300 hover:border-teal-500 hover:bg-teal-50/50 flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors cursor-pointer"
+                    >
+                      <Plus className="size-5" />
+                      <span className="text-[11px] font-medium">Add Image</span>
+                    </button>
+                  )}
+                  <input
+                    id="project-thumbnail"
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailSelect}
+                    className="hidden"
+                  />
+                  <div className="text-xs text-gray-500 flex flex-col gap-0.5">
+                    <span className="font-medium text-gray-700">Cover Thumbnail</span>
+                    <span>Upload a preview image to display on the project card.</span>
+                    {thumbnailFile ? (
+                      <span className="text-teal-600 font-mono text-[11px]">
+                        {thumbnailFile.name} ({(thumbnailFile.size / 1024).toFixed(1)} KB)
+                      </span>
+                    ) : existingThumbnail ? (
+                      <span className="text-teal-600 font-mono text-[11px]">Current thumbnail</span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -240,6 +400,18 @@ export default function AddProjectModal({ open, onOpenChange }) {
             <div>
               <Label>Images</Label>
               <div className="flex flex-wrap gap-2 mt-1">
+                {existingImages.map((img) => (
+                  <div key={img.public_id} className="relative w-20 h-20 rounded-md overflow-hidden border group" title="Uploaded image">
+                    <img src={img.secure_url} alt="Uploaded" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(img.public_id)}
+                      className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <Trash2 className="size-3" />
+                    </button>
+                  </div>
+                ))}
                 {previews.map((src, i) => (
                   <div key={i} className="relative w-20 h-20 rounded-md overflow-hidden border group">
                     <img src={src} alt={`Preview ${i}`} className="w-full h-full object-cover" />
@@ -271,7 +443,7 @@ export default function AddProjectModal({ open, onOpenChange }) {
             </div>
           )}
             <Button type="submit" disabled={isAdding}>
-              {isAdding ? <SpinnerComponent width={20} height={20} color="red" /> : "Add Project"}
+              {isAdding ? <SpinnerComponent width={20} height={20} color="red" /> : isEdit ? "Save Changes" : "Add Project"}
             </Button>
         </form>
       </DialogContent>

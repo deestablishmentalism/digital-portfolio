@@ -1,7 +1,7 @@
 import {Outlet} from 'react-router-dom'
 import Footer from '../Components/Footer';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Menu, X, Download } from 'lucide-react';
+import { Menu, X, FileText } from 'lucide-react';
 import SpinnerComponent from '../Components/SpinnerComponent';
 import logo from "../assets/logo-animation-12fps.webm";
 import api from '../api/axios';
@@ -92,8 +92,8 @@ export default function HomeLayout() {
                                     {resumeLink && (
                                         <li>
                                             <a href={resumeLink} target="_blank" rel="noopener noreferrer">
-                                                <button className="cursor-pointer hover:text-blue-500 bracket-hover flex items-center">
-                                                    <Download className="mr-2" />
+                                                    <button className="cursor-pointer hover:text-blue-500 bracket-hover flex items-center">
+                                                        <FileText className="mr-2" />
                                                     Resume
                                                 </button>
                                             </a>
@@ -113,67 +113,84 @@ export default function HomeLayout() {
                                     >Contact</button></li>
                                 </ul>
                             </nav>
-                            <button className="md:hidden cursor-pointer"
-                                onClick={()=> setIsBurger(prev=>!prev)}
-                            >
-                                {!isBurger ? 
-                                    <Menu width={40}height={50}/>
-                                :
-                                    <X width={40}height={50}/>
-                                }
-                                
-                            </button>
+                            <div className="md:hidden flex">
+                                {resumeLink && (
+                                    <div className="p-1 rounded-full bg-teal-950 hover:bg-slate-600">
+                                        <a
+                                            href={resumeLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center p-3 cursor-pointer hover:text-blue-500 bracket-hover"
+                                        >
+                                            <FileText size={24} />
+                                        </a>
+                                    </div>
+                                )}
+                                <button className="m-1 cursor-pointer"
+                                    onClick={()=> setIsBurger(prev=>!prev)}
+                                >
+                                    {!isBurger ? 
+                                        <Menu width={40}height={50}/>
+                                    :
+                                        <X width={40}height={50}/>
+                                    }
+                                    
+                                </button>
+                            </div>
+                            
                         </div>
                         {/* Mobile navigation */}
                         {isBurger && (
-                            <nav className="absolute top-full left-0 md:hidden w-full text-emerald-400 bg-slate-950/70 backdrop-blur-md">
-                                <ul className="w-full flex flex-col items-center [&>li]:font-header-text">
-                                    <li className="w-full">
-                                        <button
-                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
-                                            onClick={() => {
-                                                scrollToSection("about");
-                                                setIsBurger(false);
-                                            }}
-                                        >
-                                            About
-                                        </button>
-                                    </li>
-                                    <li className="w-full">
-                                        <button
-                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
-                                            onClick={() => {
-                                                scrollToSection("skills");
-                                                setIsBurger(false);
-                                            }}
-                                        >
-                                            Skills
-                                        </button>
-                                    </li>
-                                    <li className="w-full">
-                                        <button
-                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
-                                            onClick={() => {
-                                                scrollToSection("projects");
-                                                setIsBurger(false);
-                                            }}
-                                        >
-                                            Projects
-                                        </button>
-                                    </li>
-                                    <li className="w-full">
-                                        <button
-                                            className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer hover:bg-slate-800 border-b-1"
-                                            onClick={() => {
-                                                scrollToSection("contacts");
-                                                setIsBurger(false);
-                                            }}
-                                        >
-                                            Contact
-                                        </button>
-                                    </li>
-                                </ul>
-                            </nav>
+                            <div>
+                                <nav className="absolute top-full left-0 md:hidden w-full text-emerald-400 bg-slate-950/70 backdrop-blur-md">
+                                    <ul className="w-full flex flex-col items-center [&>li]:font-header-text">
+                                        <li className="w-full">
+                                            <button
+                                                className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
+                                                onClick={() => {
+                                                    scrollToSection("about");
+                                                    setIsBurger(false);
+                                                }}
+                                            >
+                                                About
+                                            </button>
+                                        </li>
+                                        <li className="w-full">
+                                            <button
+                                                className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
+                                                onClick={() => {
+                                                    scrollToSection("skills");
+                                                    setIsBurger(false);
+                                                }}
+                                            >
+                                                Skills
+                                            </button>
+                                        </li>
+                                        <li className="w-full">
+                                            <button
+                                                className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer border-b-1 hover:bg-slate-800"
+                                                onClick={() => {
+                                                    scrollToSection("projects");
+                                                    setIsBurger(false);
+                                                }}
+                                            >
+                                                Projects
+                                            </button>
+                                        </li>
+                                        <li className="w-full">
+                                            <button
+                                                className="w-full h-full p-4 hover:text-blue-500 bracket-hover cursor-pointer hover:bg-slate-800 border-b-1"
+                                                onClick={() => {
+                                                    scrollToSection("contacts");
+                                                    setIsBurger(false);
+                                                }}
+                                            >
+                                                Contact
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>    
+                            </div>
                         )}
                     </header>  
                 <main className="flex-1">
