@@ -11,6 +11,7 @@ import socialsRoutes from "./src/routes/socialsRoutes.js"
 import skillRoutes from "./src/routes/skillRoutes.js"
 import personalInfoRoutes from "./src/routes/personalInfoRoutes.js"
 import chatRoutes from "./src/routes/chatRoutes.js"
+import workExperienceRoutes from "./src/routes/workExperienceRoutes.js"
 import { connectDB } from "./config/db.js"
 
 cloudinary.config({
@@ -78,6 +79,7 @@ app.use("/api/links", linkRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/personal-info", personalInfoRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/work-experience", workExperienceRoutes);
 
 // Only start a local server outside of Vercel's serverless environment
 if (!process.env.VERCEL) {

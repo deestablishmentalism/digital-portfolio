@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Menu, X, Download } from 'lucide-react';
 import SpinnerComponent from '../Components/SpinnerComponent';
 import logo from "../assets/logo-animation-12fps.webm";
+import api from '../api/axios';
 
 const TOTAL_SECTIONS = 4;
 
@@ -11,7 +12,27 @@ export default function HomeLayout() {
     const [logoAnimation, setLogoAnimation] = useState(logo ?? null);
     const [isBurger, setIsBurger] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [resumeLink, setResumeLink] = useState("");
     const loadedCount = useRef(0);
+
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchResumeLink() {
+            try {
+                const response = await api.get("/personal-info");
+                if (isMounted) {
+                    setResumeLink(response.data.data?.resume_link?.trim() || "");
+                }
+            } catch {
+                // No personal info / request failed: keep the resume button hidden
+                if (isMounted) setResumeLink("");
+            }
+        }
+        fetchResumeLink();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleSectionLoad = useCallback(() => {
         loadedCount.current += 1;
@@ -68,14 +89,16 @@ export default function HomeLayout() {
                             </div>                        
                             <nav className="hidden md:block">
                                 <ul className="flex space-x-6 [&>li]:p-2 [&>li]:font-header-text">
-                                    <li>
-                                        <a href="https://drive.google.com/file/d/1zKHxKrvwzT8ZuWOzo1IJ1jMqkzp0jNkx/view?usp=sharing" target="_blank" rel="noopener noreferrer">
-                                            <button className="cursor-pointer hover:text-blue-500 bracket-hover flex items-center">
-                                                <Download className="mr-2" />
-                                                Resume
-                                            </button>
-                                        </a>
-                                    </li>
+                                    {resumeLink && (
+                                        <li>
+                                            <a href={resumeLink} target="_blank" rel="noopener noreferrer">
+                                                <button className="cursor-pointer hover:text-blue-500 bracket-hover flex items-center">
+                                                    <Download className="mr-2" />
+                                                    Resume
+                                                </button>
+                                            </a>
+                                        </li>
+                                    )}
                                     <li><button className="cursor-pointer hover:text-blue-500 bracket-hover"
                                         onClick={()=>scrollToSection("about")}
                                     >About</button></li>

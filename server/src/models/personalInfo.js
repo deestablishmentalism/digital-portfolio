@@ -37,6 +37,12 @@ const personalInfoSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    resume_link: {
+        type: String,
+        required: false,
+        trim: true,
+        default: ""
+    },
     profile: imageSchema,
     address: {
         region: {
