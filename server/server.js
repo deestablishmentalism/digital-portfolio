@@ -11,6 +11,7 @@ import socialsRoutes from "./src/routes/socialsRoutes.js"
 import skillRoutes from "./src/routes/skillRoutes.js"
 import personalInfoRoutes from "./src/routes/personalInfoRoutes.js"
 import chatRoutes from "./src/routes/chatRoutes.js"
+import workExperienceRoutes from "./src/routes/workExperienceRoutes.js"
 import { connectDB } from "./config/db.js"
 
 cloudinary.config({
@@ -19,8 +20,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const REQUIRED_ENV_VARS = ["MONGO_URI", "JWT_SECRET", "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "GEMINI_API_KEY"];
+const missingEnvVars = () => REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
+
+if (missingEnvVars().length) {
+  console.error(`Missing environment variables: ${missingEnvVars().join(", ")}`);
+}
+
 const app = express();
-connectDB();
 
 app.use(cors({
   origin: process.env.CLIENT_ORIGIN || "*",
@@ -30,6 +37,40 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
+// Health check: reports DB status and names (never values) of missing env vars
+app.get("/api/health", async (req, res) => {
+  let database = "connected";
+  let databaseError = null;
+  try {
+    await connectDB();
+  }
+  catch (error) {
+    database = "disconnected";
+    databaseError = `${error.name}: ${error.message}`;
+  }
+  const missing = missingEnvVars();
+  res.status(database === "connected" && !missing.length ? 200 : 503).json({
+    success: database === "connected",
+    database,
+    databaseError,
+    missingEnvVars: missing,
+  });
+});
+
+// Ensure the database is connected before any route runs (required for serverless cold starts)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  }
+  catch (error) {
+    res.status(503).json({
+      success: false,
+      message: "Database unavailable. Check /api/health for details.",
+    });
+  }
+});
+
 app.use("/api/projects", projectRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tech", techRoutes);
@@ -38,6 +79,7 @@ app.use("/api/links", linkRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/personal-info", personalInfoRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/work-experience", workExperienceRoutes);
 
 // Only start a local server outside of Vercel's serverless environment
 if (!process.env.VERCEL) {

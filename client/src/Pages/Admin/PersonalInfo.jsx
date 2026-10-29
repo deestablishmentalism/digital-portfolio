@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, MapPin, Pencil, X, Plus, Trash, Check, Camera, Sparkles } from "lucide-react";
+import { User, MapPin, Pencil, X, Plus, Trash, Check, Camera, Sparkles, Briefcase, CalendarDays, FileText, ExternalLink, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -342,6 +342,31 @@ export default function PersonalInfo() {
                                     </p>
                                 </div>
 
+                                {/* Resume Link */}
+                                <div className="pt-4 border-t border-slate-800/80">
+                                    <div className="flex items-center gap-2 text-teal-400 mb-2">
+                                        <FileText className="w-4 h-4" />
+                                        <h3 className="font-sub-header-text text-xs uppercase tracking-wider font-semibold">
+                                            Resume
+                                        </h3>
+                                    </div>
+                                    {personalInfo?.resume_link ? (
+                                        <a
+                                            href={personalInfo.resume_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 max-w-full text-sm font-body-text text-teal-300 hover:text-teal-200 underline-offset-4 hover:underline"
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                            <span className="truncate">{personalInfo.resume_link}</span>
+                                        </a>
+                                    ) : (
+                                        <p className="font-body-text text-sm text-slate-400">
+                                            No resume link provided. The resume button will be hidden on the public site.
+                                        </p>
+                                    )}
+                                </div>
+
                                 {/* Address / Location Details */}
                                 <div className="pt-4 border-t border-slate-800/80">
                                     <div className="flex items-center gap-2 text-teal-400 mb-3">
@@ -365,6 +390,9 @@ export default function PersonalInfo() {
                     </div>
                 </div>
             )}
+
+            {/* Work Experience (fetches independently; edit controls follow the page Edit Mode toggle) */}
+            <WorkExperienceSection editMode={editMode} />
         </div>
     );
 }
@@ -391,6 +419,7 @@ function EditMode({ personalInfo, onSave, onCancel }) {
         middle_name: personalInfo?.middle_name || "",
         last_name: personalInfo?.last_name || "",
         summary: personalInfo?.summary || "",
+        resume_link: personalInfo?.resume_link || "",
         address: {
             region: initialAddress.region || "",
             province: initialAddress.province || "",
@@ -579,7 +608,7 @@ function EditMode({ personalInfo, onSave, onCancel }) {
             showToastMessage(response.data.success, response.data.message);
             onSave(response.data.data);
         } catch (error) {
-            showToastMessage(false, error.message);
+            showToastMessage(false, getErrorMessage(error));
         } finally {
             setIsSaving(false);
         }
@@ -648,6 +677,24 @@ function EditMode({ personalInfo, onSave, onCancel }) {
                     onChange={(e) => setPayload({ ...payload, summary: e.target.value })}
                     className="bg-slate-900 border border-slate-700 text-slate-100 text-xs sm:text-sm rounded-xl leading-relaxed"
                 />
+            </div>
+
+            {/* Resume Link */}
+            <div className="pt-4 border-t border-slate-800/80">
+                <Label htmlFor="resume-link" className="text-xs font-sub-header-text uppercase text-teal-400 mb-2 block font-semibold">
+                    Resume Link
+                </Label>
+                <Input
+                    id="resume-link"
+                    type="url"
+                    placeholder="https://drive.google.com/..."
+                    value={payload.resume_link}
+                    onChange={(e) => setPayload({ ...payload, resume_link: e.target.value })}
+                    className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl"
+                />
+                <p className="mt-1.5 text-[11px] font-body-text text-slate-500">
+                    Leave empty to hide the Resume button on the public site.
+                </p>
             </div>
 
             {/* Address */}
@@ -838,6 +885,466 @@ function EditMode({ personalInfo, onSave, onCancel }) {
                         <>
                             <Check className="w-4 h-4" />
                             <span>Save Changes</span>
+                        </>
+                    )}
+                </button>
+            </div>
+        </form>
+    );
+}
+
+
+/* ---------------------------- Work Experience ---------------------------- */
+
+const NEW_EXPERIENCE_ID = "new";
+
+// Dates are stored as UTC midnight, so always format/convert in UTC to avoid off-by-one days
+const toDateInputValue = (date) => (date ? new Date(date).toISOString().slice(0, 10) : "");
+
+const formatMonthYear = (date) =>
+    new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+
+function formatDuration(start, end) {
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+    const totalMonths = Math.max(
+        1,
+        (endDate.getUTCFullYear() - startDate.getUTCFullYear()) * 12 +
+            (endDate.getUTCMonth() - startDate.getUTCMonth()) +
+            1
+    );
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    return [
+        years ? `${years} yr${years > 1 ? "s" : ""}` : null,
+        months ? `${months} mo${months > 1 ? "s" : ""}` : null,
+    ]
+        .filter(Boolean)
+        .join(" ");
+}
+
+const sortByStartDateDesc = (list) =>
+    [...list].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+
+const getErrorMessage = (error) => error.response?.data?.message || error.message;
+
+function WorkExperienceSection({ editMode }) {
+    const showToastMessage = useToastMessage();
+    const [experiences, setExperiences] = useState([]);
+    const [isFetching, setIsFetching] = useState(true);
+    const [editingId, setEditingId] = useState(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
+
+    // Leaving page-level edit mode closes any open form / delete confirmation
+    const activeEditingId = editMode ? editingId : null;
+    const activeConfirmDeleteId = editMode ? confirmDeleteId : null;
+
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchExperiences() {
+            try {
+                const response = await api.get("/work-experience/admin");
+                if (isMounted) {
+                    setExperiences(response.data.data || []);
+                }
+            } catch (error) {
+                showToastMessage(false, getErrorMessage(error));
+            } finally {
+                if (isMounted) {
+                    setIsFetching(false);
+                }
+            }
+        }
+        fetchExperiences();
+        return () => {
+            isMounted = false;
+        };
+    }, [showToastMessage]);
+
+    const handleSaved = (saved) => {
+        setExperiences((prev) => {
+            const exists = prev.some((item) => item._id === saved._id);
+            const next = exists
+                ? prev.map((item) => (item._id === saved._id ? saved : item))
+                : [...prev, saved];
+            return sortByStartDateDesc(next);
+        });
+        setEditingId(null);
+    };
+
+    const handleDelete = async (id) => {
+        setDeletingId(id);
+        try {
+            const response = await api.delete(`/work-experience/${id}`);
+            setExperiences((prev) => prev.filter((item) => item._id !== id));
+            showToastMessage(response.data.success, response.data.message);
+            setConfirmDeleteId(null);
+        } catch (error) {
+            showToastMessage(false, getErrorMessage(error));
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    return (
+        <div className="p-5 sm:p-6 rounded-2xl bg-slate-950/40 border border-slate-800/80 backdrop-blur-xs flex flex-col gap-5">
+            {/* Section Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+                <div>
+                    <div className="flex items-center gap-2 text-teal-400">
+                        <Briefcase className="w-4 h-4" />
+                        <h2 className="font-sub-header-text text-xs uppercase tracking-wider font-semibold">
+                            Work Experience
+                        </h2>
+                    </div>
+                    <p className="text-xs font-body-text text-slate-400 mt-1">
+                        {editMode
+                            ? "Add, update, or remove positions from your professional history."
+                            : "Your professional history. Click Edit Profile to make changes."}
+                    </p>
+                </div>
+                {editMode && activeEditingId !== NEW_EXPERIENCE_ID && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setConfirmDeleteId(null);
+                            setEditingId(NEW_EXPERIENCE_ID);
+                        }}
+                        className="inline-flex items-center self-start sm:self-auto gap-1.5 px-4 py-2 rounded-xl bg-teal-950/80 border border-teal-500/40 text-teal-200 hover:bg-teal-900 text-xs font-sub-header-text uppercase tracking-wider font-semibold transition-all cursor-pointer"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Experience</span>
+                    </button>
+                )}
+            </div>
+
+            {/* New Experience Form */}
+            {activeEditingId === NEW_EXPERIENCE_ID && (
+                <WorkExperienceForm onSaved={handleSaved} onCancel={() => setEditingId(null)} />
+            )}
+
+            {isFetching ? (
+                <div className="flex justify-center items-center py-10">
+                    <SpinnerComponent width={28} height={28} />
+                </div>
+            ) : experiences.length === 0 ? (
+                activeEditingId !== NEW_EXPERIENCE_ID && (
+                    <div className="py-10 flex flex-col items-center gap-2 text-center text-slate-400">
+                        <Briefcase className="w-10 h-10 opacity-30 text-teal-400" />
+                        <p className="text-sm font-body-text">No work experience added yet.</p>
+                    </div>
+                )
+            ) : (
+                <ol className="relative flex flex-col gap-4 border-l border-slate-800 ml-2">
+                    {experiences.map((experience) => (
+                        <li key={experience._id} className="relative pl-6">
+                            {/* Timeline marker */}
+                            <span
+                                className={`absolute -left-[7px] top-4 w-3.5 h-3.5 rounded-full border-2 ${
+                                    experience.end_date
+                                        ? "border-slate-600 bg-slate-900"
+                                        : "border-teal-400 bg-teal-950 shadow-[0_0_8px] shadow-teal-500/60"
+                                }`}
+                            />
+                            {activeEditingId === experience._id ? (
+                                <WorkExperienceForm
+                                    experience={experience}
+                                    onSaved={handleSaved}
+                                    onCancel={() => setEditingId(null)}
+                                />
+                            ) : (
+                                <WorkExperienceCard
+                                    experience={experience}
+                                    editMode={editMode}
+                                    isConfirmingDelete={activeConfirmDeleteId === experience._id}
+                                    isDeleting={deletingId === experience._id}
+                                    onEdit={() => {
+                                        setConfirmDeleteId(null);
+                                        setEditingId(experience._id);
+                                    }}
+                                    onRequestDelete={() => setConfirmDeleteId(experience._id)}
+                                    onCancelDelete={() => setConfirmDeleteId(null)}
+                                    onConfirmDelete={() => handleDelete(experience._id)}
+                                />
+                            )}
+                        </li>
+                    ))}
+                </ol>
+            )}
+        </div>
+    );
+}
+
+function WorkExperienceCard({
+    experience,
+    editMode,
+    isConfirmingDelete,
+    isDeleting,
+    onEdit,
+    onRequestDelete,
+    onCancelDelete,
+    onConfirmDelete,
+}) {
+    const isCurrent = !experience.end_date;
+    return (
+        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <h3 className="text-base font-bold font-sub-header-text text-slate-100 tracking-wide break-words">
+                            {experience.work_title}
+                        </h3>
+                        {experience.company && (
+                            <>
+                                <span className="text-slate-600 hidden sm:inline">•</span>
+                                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-sub-header-text text-teal-300 font-medium">
+                                    <Building2 className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                                    <span>{experience.company}</span>
+                                </span>
+                            </>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs font-body-text text-slate-400">
+                        <CalendarDays className="w-3.5 h-3.5 text-teal-400" />
+                        <span>
+                            {formatMonthYear(experience.start_date)} —{" "}
+                            {isCurrent ? "Present" : formatMonthYear(experience.end_date)}
+                        </span>
+                        <span className="text-slate-600">•</span>
+                        <span>{formatDuration(experience.start_date, experience.end_date)}</span>
+                        {isCurrent && (
+                            <span className="px-2 py-0.5 rounded-full border border-teal-500/30 bg-teal-950/60 text-teal-300 text-[10px] font-sub-header-text uppercase tracking-wider">
+                                Current
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {editMode && (
+                    <div className="flex items-center gap-2 shrink-0">
+                        {isConfirmingDelete ? (
+                            <>
+                                <span className="text-[11px] font-sub-header-text uppercase text-red-300">Delete?</span>
+                                <button
+                                    type="button"
+                                    onClick={onCancelDelete}
+                                    disabled={isDeleting}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-[11px] font-sub-header-text uppercase cursor-pointer disabled:opacity-50"
+                                >
+                                    No
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={onConfirmDelete}
+                                    disabled={isDeleting}
+                                    className="inline-flex items-center justify-center min-w-12 px-3 py-1.5 rounded-lg bg-red-950/80 border border-red-500/40 text-red-200 hover:bg-red-900 text-[11px] font-sub-header-text uppercase cursor-pointer disabled:opacity-50"
+                                >
+                                    {isDeleting ? <SpinnerComponent width={14} height={14} /> : "Yes"}
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={onEdit}
+                                    className="p-2 rounded-lg bg-slate-900 border border-teal-500/30 text-teal-200 hover:bg-teal-950 cursor-pointer transition-colors"
+                                    title="Edit experience"
+                                >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={onRequestDelete}
+                                    className="p-2 rounded-lg bg-slate-900 border border-red-500/30 text-red-300 hover:bg-red-950 cursor-pointer transition-colors"
+                                    title="Delete experience"
+                                >
+                                    <Trash className="w-3.5 h-3.5" />
+                                </button>
+                            </>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {experience.description && (
+                <p className="font-body-text text-sm text-slate-300 leading-relaxed whitespace-pre-line">
+                    {experience.description}
+                </p>
+            )}
+        </div>
+    );
+}
+
+function WorkExperienceForm({ experience, onSaved, onCancel }) {
+    const showToastMessage = useToastMessage();
+    const isNew = !experience?._id;
+    const [isSaving, setIsSaving] = useState(false);
+    const [isCurrent, setIsCurrent] = useState(isNew ? false : !experience.end_date);
+    const [payload, setPayload] = useState({
+        work_title: experience?.work_title || "",
+        company: experience?.company || "",
+        description: experience?.description || "",
+        start_date: toDateInputValue(experience?.start_date),
+        end_date: toDateInputValue(experience?.end_date),
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const body = {
+            work_title: payload.work_title.trim(),
+            company: payload.company.trim(),
+            description: payload.description.trim(),
+            start_date: payload.start_date,
+            end_date: isCurrent ? null : payload.end_date,
+        };
+
+        if (!body.work_title || !body.company || !body.start_date) {
+            showToastMessage(false, "Work title, company, and start date are required.");
+            return;
+        }
+        if (!isCurrent && !body.end_date) {
+            showToastMessage(false, "Please provide an end date or mark this as your current position.");
+            return;
+        }
+        if (body.end_date && body.end_date < body.start_date) {
+            showToastMessage(false, "End date cannot be earlier than the start date.");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const response = isNew
+                ? await api.post("/work-experience", body)
+                : await api.put(`/work-experience/${experience._id}`, body);
+            showToastMessage(response.data.success, response.data.message);
+            onSaved(response.data.data);
+        } catch (error) {
+            showToastMessage(false, getErrorMessage(error));
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const inputId = (field) => `work-${experience?._id || NEW_EXPERIENCE_ID}-${field}`;
+
+    return (
+        <form
+            onSubmit={handleSubmit}
+            className="p-4 rounded-xl bg-slate-900/60 border border-teal-500/30 flex flex-col gap-4"
+        >
+            <div className="flex items-center gap-2 text-teal-400">
+                <Briefcase className="w-4 h-4" />
+                <h3 className="font-sub-header-text text-xs uppercase tracking-wider font-semibold">
+                    {isNew ? "New Work Experience" : "Edit Work Experience"}
+                </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <Label htmlFor={inputId("title")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                        Work Title
+                    </Label>
+                    <Input
+                        id={inputId("title")}
+                        placeholder="e.g. Full Stack Developer"
+                        value={payload.work_title}
+                        onChange={(e) => setPayload({ ...payload, work_title: e.target.value })}
+                        required
+                        className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl"
+                    />
+                </div>
+                <div>
+                    <Label htmlFor={inputId("company")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                        Company
+                    </Label>
+                    <Input
+                        id={inputId("company")}
+                        placeholder="e.g. Acme Corp"
+                        value={payload.company}
+                        onChange={(e) => setPayload({ ...payload, company: e.target.value })}
+                        required
+                        className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <Label htmlFor={inputId("start")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                        Start Date
+                    </Label>
+                    <Input
+                        id={inputId("start")}
+                        type="date"
+                        value={payload.start_date}
+                        max={!isCurrent && payload.end_date ? payload.end_date : undefined}
+                        onChange={(e) => setPayload({ ...payload, start_date: e.target.value })}
+                        required
+                        className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl [color-scheme:dark]"
+                    />
+                </div>
+                <div>
+                    <Label htmlFor={inputId("end")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                        End Date
+                    </Label>
+                    <Input
+                        id={inputId("end")}
+                        type="date"
+                        value={isCurrent ? "" : payload.end_date}
+                        min={payload.start_date || undefined}
+                        onChange={(e) => setPayload({ ...payload, end_date: e.target.value })}
+                        disabled={isCurrent}
+                        required={!isCurrent}
+                        className="bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl [color-scheme:dark]"
+                    />
+                </div>
+            </div>
+
+            <label className="inline-flex items-center gap-2 self-start text-xs font-body-text text-slate-300 cursor-pointer select-none">
+                <input
+                    type="checkbox"
+                    checked={isCurrent}
+                    onChange={(e) => setIsCurrent(e.target.checked)}
+                    className="w-4 h-4 accent-teal-500 cursor-pointer"
+                />
+                I currently work here
+            </label>
+
+            <div>
+                <Label htmlFor={inputId("description")} className="text-xs font-sub-header-text uppercase text-slate-400 mb-1.5 block">
+                    Description
+                </Label>
+                <Textarea
+                    id={inputId("description")}
+                    rows={4}
+                    placeholder="Describe your responsibilities, achievements, and the technologies you used..."
+                    value={payload.description}
+                    onChange={(e) => setPayload({ ...payload, description: e.target.value })}
+                    className="bg-slate-900 border border-slate-700 text-slate-100 text-xs sm:text-sm rounded-xl leading-relaxed"
+                />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    disabled={isSaving}
+                    className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-sub-header-text uppercase tracking-wider cursor-pointer disabled:opacity-50"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-950/80 border border-teal-500/40 text-teal-200 hover:bg-teal-900 text-xs font-sub-header-text uppercase tracking-wider font-semibold transition-all cursor-pointer disabled:opacity-50"
+                >
+                    {isSaving ? (
+                        <SpinnerComponent width={16} height={16} />
+                    ) : (
+                        <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{isNew ? "Add Experience" : "Save Changes"}</span>
                         </>
                     )}
                 </button>

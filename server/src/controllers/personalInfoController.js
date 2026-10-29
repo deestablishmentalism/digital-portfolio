@@ -25,7 +25,15 @@ export async function getPersonalInfo(req, res) {
 
 export async function updatePersonalInfo(req, res) {
     try {
-        const { first_name, middle_name, last_name, summary, address } = req.body;
+        const { first_name, middle_name, last_name, summary, address, resume_link } = req.body;
+        const resumeLink = typeof resume_link === "string" ? resume_link.trim() : "";
+        // Only allow http(s) links since this value is rendered as a public href
+        if(resumeLink && !/^https?:\/\//i.test(resumeLink)) {
+            return res.status(400).json({
+                success: false,
+                message: "Resume link must be a valid URL starting with http:// or https://"
+            });
+        }
         let personalInfo = await PersonalInfo.findOne({});
         if(!personalInfo) {
             personalInfo = new PersonalInfo({});
@@ -34,6 +42,7 @@ export async function updatePersonalInfo(req, res) {
         personalInfo.middle_name = middle_name;
         personalInfo.last_name = last_name;
         personalInfo.summary = summary;
+        personalInfo.resume_link = resumeLink;
         if(address) {
             const newAddress = {
                 region: address.region || "",
